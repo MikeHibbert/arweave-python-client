@@ -11,7 +11,7 @@ from jose.backends.cryptography_backend import CryptographyRSAKey
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
 from Crypto.Hash import SHA256
-from utils import (
+from .utils import (
     winston_to_ar, 
     ar_to_winston, 
     owner_to_address,
