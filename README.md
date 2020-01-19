@@ -19,7 +19,6 @@ wallet = arewave.Wallet(wallet_file_path)
 balance =  wallet.get_balance()
 
 last_transaction = wallet.get_last_transaction_id()
-=
 ```
 
 ##Transactions
