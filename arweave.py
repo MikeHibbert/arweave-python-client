@@ -72,6 +72,7 @@ class Transaction(object):
     def __init__(self, wallet, **kwargs):
         self.jwk_data = wallet.jwk_data
         self.jwk = jwk.construct(self.jwk_data, algorithm="RS256")
+        self.wallet = wallet
         
         self.id = kwargs.get('id', '')
         self.last_tx = wallet.get_last_transaction_id()
@@ -90,7 +91,7 @@ class Transaction(object):
         self.api_url = "https://arweave.net"
         
         reward = kwargs.get('reward', None)
-        if reward != None:
+        if reward is not None:
             self.reward = reward  
         else:
             self.reward = self.get_reward(self.data)
@@ -117,10 +118,10 @@ class Transaction(object):
         tag = create_tag(name, value)
         self.tags.append(tag)        
         
-    def sign(self, wallet):
+    def sign(self):
         data_to_sign = self.get_signature_data()
         
-        raw_signature = wallet.sign(data_to_sign)
+        raw_signature = self.wallet.sign(data_to_sign)
         
         self.signature = base64url_encode(raw_signature)
         
@@ -147,7 +148,7 @@ class Transaction(object):
         
         return signature_data
     
-    def post(self):
+    def send(self):
         url = "{}/tx".format(self.api_url)
 
         response = requests.post(url, data=self.json_data)
@@ -181,8 +182,6 @@ class Transaction(object):
         url = "{}/tx/{}/status".format(self.api_url, self.id)
 
         response = requests.get(url)
-        
-        json_status = None
 
         if response.status_code == 200:
             self.status = json.loads(response.text)
