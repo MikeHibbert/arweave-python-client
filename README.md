@@ -7,7 +7,7 @@ To use the library simply install it:
 pip install arweave-python-client
 ```
 
-##Using your wallet
+## Using your wallet
 Once installed you can import it and supply the wallet object with the path to your wallet JSON file:
 ```buildoutcfg
 import arweave
@@ -21,7 +21,7 @@ balance =  wallet.get_balance()
 last_transaction = wallet.get_last_transaction_id()
 ```
 
-##Transactions
+## Transactions
 To send a transaction you will need to open your wallet, create a transaction object, sign the transaction and then finally post the transaction:
 ```buildoutcfg
 import arweave
@@ -46,7 +46,7 @@ transaction = Transaction(wallet, id='some id you stored')
 status = transaction.get_status()
 ```
 
-##Storing data
+## Storing data
 As you know Arweave allows you to permanently store data on the network and you can do this by supplying data to the transaction as a string object:
 ```buildoutcfg
 wallet = Wallet(jwk_file)
