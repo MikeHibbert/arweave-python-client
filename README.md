@@ -31,7 +31,7 @@ wallet_file_path = "/some/folder/on/your/system"
 wallet = arewave.Wallet(wallet_file_path)
 
 transaction = Transaction(wallet, quantity=0.3, to='<some wallet address')
-transaction.sign(wallet)
+transaction.sign()
 transaction.send()
 ```
 
