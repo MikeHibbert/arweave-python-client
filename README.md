@@ -66,6 +66,7 @@ wallet = Wallet(jwk_file)
 wallet.api_url = 'some specific node ip/address and port'
 
 Or
+
 transaction = Transaction(wallet, data=pdf_string_data)
 transaction.api_url = 'some specific node ip/address and port'
 
