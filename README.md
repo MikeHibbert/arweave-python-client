@@ -59,3 +59,15 @@ with open('myfile.pdf', 'r') as mypdf:
     transaction.send()
 ```
 
+## Sending to a specific Node
+You can specify a specific node by setting the api_url of the wallet/transaction object:
+```
+wallet = Wallet(jwk_file)
+wallet.api_url = 'some specific node ip/address and port'
+
+Or
+transaction = Transaction(wallet, data=pdf_string_data)
+transaction.api_url = 'some specific node ip/address and port'
+
+```
+
