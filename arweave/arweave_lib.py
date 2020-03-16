@@ -58,7 +58,7 @@ class Wallet(object):
         pass 
     
     def get_last_transaction_id(self):
-        url = "{}/wallet/{}/tx_anchor".format(self.api_url, self.address)
+        url = "{}/tx_anchor".format(self.api_url)
 
         response = requests.get(url)
 
