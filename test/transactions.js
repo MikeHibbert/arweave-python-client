@@ -23,6 +23,10 @@ const run_test = async function() {
 
     arweave.transactions.sign(transaction, jwk)
 
+    const result = await arweave.transactions.post(transaction);
+
+    console.log(transaction.id);
+    console.log(transaction.signature);
     console.log(transaction.data);
     console.log(transaction.data_root);
     console.log(transaction.data_size);

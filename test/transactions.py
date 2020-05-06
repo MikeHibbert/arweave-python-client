@@ -22,6 +22,8 @@ def run_test(jwk_file):
 
     tx.sign()
 
+    tx.send()
+
     logger.info(tx.data)
     logger.info(tx.data_root)
 
