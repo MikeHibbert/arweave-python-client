@@ -16,8 +16,12 @@ from .utils import (
     ar_to_winston, 
     owner_to_address,
     create_tag,
+    encode_tag,
     decode_tag
 )
+from .deep_hash import deep_hash
+from .merkle import compute_root_hash
+
 
 logger = logging.getLogger(__name__)
 
@@ -79,12 +83,21 @@ class Transaction(object):
         self.owner = self.jwk_data.get('n')
         self.tags = []
         self.quantity = kwargs.get('quantity', '0')
+
+        self.format = kwargs.get('format', 2)
         
         data = kwargs.get('data', '')
+
         if type(data) is bytes:
             self.data = base64url_encode(data)
         else:
             self.data = base64url_encode(data.encode('ascii'))
+
+        self.data_size = len(data)
+        root_hash = compute_root_hash(data)
+        self.data_root = base64url_encode(root_hash)
+        self.data_tree = []
+
         self.target = kwargs.get('target', '')
         self.to = kwargs.get('to', '')
         
@@ -115,8 +128,15 @@ class Transaction(object):
         return reward       
     
     def add_tag(self, name, value):
-        tag = create_tag(name, value)
-        self.tags.append(tag)        
+        tag = create_tag(name, value, self.format == 2)
+        self.tags.append(tag)
+
+    def encode_tags(self):
+        tags = []
+        for tag in self.tags:
+            tags.append(encode_tag(tag))
+
+        self.tags = tags
         
     def sign(self):
         data_to_sign = self.get_signature_data()
@@ -131,21 +151,38 @@ class Transaction(object):
             self.id = self.id.decode()
         
     def get_signature_data(self):
-        tag_str = ""
-        
-        for tag in self.tags:
-            name, value = decode_tag(tag)
-            tag_str += "{}{}".format(name.decode(), value.decode())
-            
-        owner = base64url_decode(self.jwk_data['n'].encode())
-        target = base64url_decode(self.target)
-        data = base64url_decode(self.data)
-        quantity = self.quantity.encode()
-        reward = self.reward.encode()
-        last_tx = base64url_decode(self.last_tx.encode())
-        
-        signature_data = owner + target + data + quantity + reward + last_tx + tag_str.encode()
-        
+        if self.format == 1:
+            tag_str = ""
+
+            for tag in self.tags:
+                name, value = decode_tag(tag)
+                tag_str += "{}{}".format(name.decode(), value.decode())
+
+            owner = base64url_decode(self.jwk_data['n'].encode())
+            target = base64url_decode(self.target)
+            data = base64url_decode(self.data)
+            quantity = self.quantity.encode()
+            reward = self.reward.encode()
+            last_tx = base64url_decode(self.last_tx.encode())
+
+            signature_data = owner + target + data + quantity + reward + last_tx + tag_str.encode()
+
+        if self.format == 2:
+            tag_list = [[tag['name'].encode(), tag['value'].encode()] for tag in self.tags]
+
+            signature_data_list = [
+                "2".encode(),
+                base64url_decode(self.jwk_data['n'].encode()),
+                base64url_decode(self.target),
+                self.quantity.encode(),
+                self.reward.encode(),
+                base64url_decode(self.last_tx.encode()),
+                tag_list,
+                str(self.data_size).encode(),
+                base64url_decode(self.data_root)]
+
+            signature_data = deep_hash(signature_data_list)
+
         return signature_data
     
     def send(self):
@@ -164,7 +201,7 @@ class Transaction(object):
     
     @property
     def json_data(self):
-        jsons = json.dumps({
+        data = {
                  'data': self.data.decode(),
                  'id': self.id.decode() if type(self.id) == bytes else self.id,
                  'last_tx': self.last_tx,
@@ -174,7 +211,17 @@ class Transaction(object):
                  'signature': self.signature.decode(),
                  'tags': self.tags,
                  'target': self.target
-                })        
+                }
+
+        if self.format == 2:
+            self.encode_tags()
+            data['tags'] = self.tags
+            data['format'] = 2
+            data['data_root'] = self.data_root.decode()
+            data['data_size'] = str(self.data_size)
+            data['data_tree'] = []
+
+        jsons = json.dumps(data)
         
         return jsons.replace(' ','')
     
@@ -216,57 +263,12 @@ class Transaction(object):
         self.signature = json_data.get('signature', '')
         self.tags = json_data.get('tags', '')
         self.target = json_data.get('target', '')
+        self.data_size = json_data.get('data_size', '0')
+        self.data_root = json_data.get('data_root', '')
+        self.data_tree = json_data.get('data_tree', [])
         
         logger.debug(json_data)
         
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
 
-    from os.path import isfile, join
-    from os import listdir
-
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    
-    def run_test(jwk_file):
-        wallet = Wallet(jwk_file)
-        
-        pdf_filename = "/home/mike/Downloads/me.jpg"
-        with open(pdf_filename, 'rb') as pdf_file:
-            pdf_data = pdf_file.read()
-
-            balance = wallet.get_balance()
-            
-            logger.debug(balance)
-            
-            tx = Transaction(wallet=wallet, data=pdf_data)
-            
-            tx.add_tag('app', "arweave-dapp_app_v1.3");
-            tx.add_tag('created', str(arrow.now().timestamp));
-            tx.add_tag('title', "Highcharts Demo");
-            tx.add_tag('description', "dsadsdasdasdasdas");
-            tx.add_tag('filename', "test2.pdf");     
-            
-            tx.sign(wallet)
-            
-            tx.post()
-            
-            logger.debug(tx.get_status())
-            
-            new_tx = Transaction(wallet, id="3DEVEPwqNLIcuLzzPZrg6raHZui2rem6zcGV7Fpitag")
-            new_tx.get_transaction()
-            new_tx.get_status()
-            logger.debug(new_tx.status)
-
-
-    wallet_path = '/home/mike/Documents/python/arkive/arkive/wallet' # os.path.join(BASE_DIR, 'arkive', 'wallet')
-
-    files = [f for f in listdir(wallet_path) if isfile(join(wallet_path, f))]
-
-    if len(files) > 0:
-        filename = files[0]
-    else:
-        raise FileNotFoundError("Unable to load a wallet JSON file from wallet/ ")
-
-    run_test(join(wallet_path, filename))
 

@@ -1,24 +1,39 @@
 import hashlib
+from Crypto.Signature import PKCS1_PSS
+from Crypto.Hash import SHA256
 from jose import jwk
 from jose.utils import base64url_encode, base64url_decode, base64
 
 
-def create_tag(name, value):
-    b64name = base64url_encode(name.encode('ascii')).decode()
-    b64value = base64url_encode(value.encode('ascii')).decode()
+def create_tag(name, value, v2):
+    if v2:
+        b64name = name
+        b64value = value
+    else:
+        b64name = base64url_encode(name.encode('ascii')).decode()
+        b64value = base64url_encode(value.encode('ascii')).decode()
     
     return {"name": b64name, "value":b64value}
+
+
+def encode_tag(tag):
+    b64name = base64url_encode(tag['name'].encode('ascii')).decode()
+    b64value = base64url_encode(tag['value'].encode('ascii')).decode()
+
+    return {"name": b64name, "value": b64value}
 
 def decode_tag(tag):
     name = base64url_decode(tag['name'].encode())
     value = base64url_decode(tag['value'].encode())
     
     return name, value
-    
+
+
 def owner_to_address(owner):
     result = base64url_encode(hashlib.sha256(base64url_decode(owner.encode('ascii'))).digest()).decode()
 
     return result
+
 
 def winston_to_ar(winston_str):
     length = len(winston_str)
@@ -32,6 +47,8 @@ def winston_to_ar(winston_str):
         
     return float(winston_str)
 
+
 def ar_to_winston(ar_amount):
     ar_str = "{:.12f}".format(ar_amount)
     return ar_str.replace('.','')
+

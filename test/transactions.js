@@ -2,7 +2,7 @@ const Arweave = require('arweave/node');
 const fs = require('fs');
 
 const run_test = async function() {
-    const wallet_path = '/home/mike/Documents/python/arkive/arkive/wallet/arweave-keyfile-h-Bgr13OWUOkRGWrnMT0LuUKfJhRss5pfTdxHmNcXyw.json';
+    const wallet_path = '/home/mike/Documents/python/arkive/arkive/wallet/';
     const arweave = Arweave.init(arweave_config = {
         host: 'arweave.net',// Hostname or IP address for a Arweave node
         port: 443,           // Port, defaults to 1984
@@ -11,7 +11,21 @@ const run_test = async function() {
         logging: false,     // Enable network request logging
     });
 
-    const text = fs.readFileSync(wallet_path, 'utf8')
+    let wallet_file = wallet_path;
+
+    fs.readdirSync(wallet_path).forEach(file => {
+        console.log(file);
+
+        if(!file.endsWith('.json')) {
+            return;
+        }
+
+        wallet_file += file;
+
+        
+    });
+
+    const text = fs.readFileSync(wallet_file, 'utf8')
     const jwk = JSON.parse(text);
 
     let transaction = await arweave.createTransaction({
@@ -30,6 +44,7 @@ const run_test = async function() {
     console.log(transaction.data);
     console.log(transaction.data_root);
     console.log(transaction.data_size);
+    
 }
 
 run_test();

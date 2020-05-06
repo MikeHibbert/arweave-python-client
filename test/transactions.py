@@ -22,7 +22,20 @@ def run_test(jwk_file):
 
     tx.sign()
 
-    tx.send()
+    # tx.send()
+
+    logger.info(tx.data)
+    logger.info(tx.data_root)
+
+    if tx.data != DATA:
+        raise Exception("Data does not match expected result!")
+
+    if tx.data_root != DATA_ROOT:
+        raise Exception("Data root does not match expected result!")
+
+    tx = Transaction(wallet, id='fJ0iAcSPg3QmVmtVFozrt8roFrUh5qnocnLWCaOjpyU')
+
+    tx.get_transaction()
 
     logger.info(tx.data)
     logger.info(tx.data_root)
