@@ -14,8 +14,11 @@ def run_test(jwk_file):
     balance = wallet.get_balance()
 
     logger.debug(balance)
+    data = "test"
+    with open("Mining On The Arweave.pdf", "rb") as pdf_file:
+        data = pdf_file.read()
 
-    tx = Transaction(wallet=wallet, data="test")
+    tx = Transaction(wallet=wallet, data=data)
 
     tx.add_tag('key1', 'value1');
     tx.add_tag('key2', 'value2');
@@ -27,15 +30,17 @@ def run_test(jwk_file):
     logger.info(tx.data)
     logger.info(tx.data_root)
 
-    if tx.data != DATA:
-        raise Exception("Data does not match expected result!")
+    # if tx.data != DATA:
+    #     raise Exception("Data does not match expected result!")
+    #
+    # if tx.data_root != DATA_ROOT:
+    #     raise Exception("Data root does not match expected result!")
 
-    if tx.data_root != DATA_ROOT:
-        raise Exception("Data root does not match expected result!")
-
-    tx = Transaction(wallet, id='fJ0iAcSPg3QmVmtVFozrt8roFrUh5qnocnLWCaOjpyU')
+    tx = Transaction(wallet, id='HMDsP8HmP4KOsSYcKvFXXkj8hax-YD53tQC24VamgLo')
 
     tx.get_transaction()
+
+    tx.get_data()
 
     logger.info(tx.data)
     logger.info(tx.data_root)

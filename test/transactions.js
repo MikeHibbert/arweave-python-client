@@ -28,8 +28,11 @@ const run_test = async function() {
     const text = fs.readFileSync(wallet_file, 'utf8')
     const jwk = JSON.parse(text);
 
+
+    const data = fs.readFileSync("/home/mike/Documents/python/arweave-python-client/arweave-python-client/test/Mining On The Arweave.pdf");
+
     let transaction = await arweave.createTransaction({
-        data: 'test'
+        data: data
     }, jwk);
 
     transaction.addTag('key1', 'value1');
