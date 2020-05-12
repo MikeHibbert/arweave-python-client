@@ -1,4 +1,5 @@
 import hashlib
+import struct
 from jose.utils import base64url_encode, base64url_decode
 
 CHUNK_SIZE = 256 * 1024
@@ -28,7 +29,7 @@ def compute_root_hash(data):
 
     while len(rest) >= CHUNK_SIZE:
         chunk = rest[:CHUNK_SIZE]
-        chunk_id = base64url_encode(hashlib.sha256(chunk).digest())
+        chunk_id = hashlib.sha256(chunk).digest()
 
         pos += len(chunk)
 
@@ -44,9 +45,9 @@ def compute_root_hash(data):
     nodes = [hash_leaf(tc.id, tc.end) for tc in tagged_chunks]
 
     while len(nodes) > 1:
-        next_nodes = []; nadd = next_nodes.append()
-        for i in range(len(nodes), step=2):
-            nadd(
+        next_nodes = []
+        for i in range(0, len(nodes), 2):
+            next_nodes.append(
                 hash_branch(nodes[i], nodes[i+1])
             )
 
@@ -55,18 +56,17 @@ def compute_root_hash(data):
     return nodes[0].id
 
 
-
 def hash_branch(left, right=None):
     if not right:
         return left
 
     return HashNode(
         hash(
-            bytearray(
+            [
                 hash(left.id),
                 hash(right.id),
                 hash(note_to_buffer(left.max))
-            )
+            ]
         ),
         right.max
     )
@@ -99,7 +99,7 @@ def note_to_buffer(note):
     for i in range(NOTE_SIZE-1, 0, -1):
         if i > 0:
             if note > 0:
-                buffer[i] = note
+                buffer[i] = note.to_bytes(4, byteorder='big')[-1]
                 note = note >> 8
             else:
                 break

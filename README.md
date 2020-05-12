@@ -59,6 +59,20 @@ with open('myfile.pdf', 'r') as mypdf:
     transaction.send()
 ```
 
+## Retrieving transactions/data
+To get the information about a transaction you can create a transaction object with the ID of that transaction:
+```
+tx = Transaction(id=<your tx id>)
+tx.get_transaction()
+```
+
+In addition you may want to get the data attached to this transaction once you've decided you need it:
+```
+tx.get_data()
+print(tx.data) 
+> "some data"
+```
+
 ## Sending to a specific Node
 You can specify a specific node by setting the api_url of the wallet/transaction object:
 ```

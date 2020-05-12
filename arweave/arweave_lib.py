@@ -251,7 +251,18 @@ class Transaction(object):
             logger.error(response.text)    
             
         return tx
-            
+
+    def get_data(self):
+        url = "{}/tx/{}/data".format(self.api_url, self.id)
+
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            self.data = base64url_decode(response.text.encode())
+        else:
+            logger.error(response.text)
+
+
     def load_json(self, json_str):
         json_data = json.loads(json_str)
         
