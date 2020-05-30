@@ -1,6 +1,6 @@
 import os
 import logging
-from arweave.arweave_lib import Wallet, Transaction
+from arweave.arweave_lib import Wallet, Transaction, arql, arql_with_transaction_data
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +25,9 @@ def run_test(jwk_file):
 
     tx.sign()
 
-    # tx.send()
+    tx.send()
 
-    logger.info(tx.data)
+    logger.info(tx.id)
     logger.info(tx.data_root)
 
     # if tx.data != DATA:
@@ -45,11 +45,35 @@ def run_test(jwk_file):
     logger.info(tx.data)
     logger.info(tx.data_root)
 
-    if tx.data != DATA:
-        raise Exception("Data does not match expected result!")
+    # if tx.data != DATA:
+    #     raise Exception("Data does not match expected result!")
+    #
+    # if tx.data_root != DATA_ROOT:
+    #     raise Exception("Data root does not match expected result!")
 
-    if tx.data_root != DATA_ROOT:
-        raise Exception("Data root does not match expected result!")
+    transaction_ids = arql(
+        wallet,
+        {
+            "op": "equals",
+            "expr1": "from",
+            "expr2": "OFD5dO06Wdurb4w5TTenzkw1PacATOP-6lAlfAuRZFk"
+        }
+    )
+
+    if len(transaction_ids) == 0:
+        raise Exception("AQRL search failed to find any transactions")
+
+    transactions = arql_with_transaction_data(
+        wallet,
+        {
+            "op": "equals",
+            "expr1": "from",
+            "expr2": "OFD5dO06Wdurb4w5TTenzkw1PacATOP-6lAlfAuRZFk"
+        }
+    )
+
+    if len(transactions) == 0:
+        raise Exception("AQRL search failed to find any transactions")
 
 
 if __name__ == "__main__":

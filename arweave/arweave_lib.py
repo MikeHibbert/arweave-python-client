@@ -26,6 +26,8 @@ from .merkle import compute_root_hash
 logger = logging.getLogger(__name__)
 
 TRANSACTION_DATA_LIMIT_IN_BYTES = 2000000
+API_URL = "https://arweave.net"
+
 
 class Wallet(object):
     HASH = 'sha256'
@@ -40,7 +42,7 @@ class Wallet(object):
             self.owner = self.jwk_data.get('n')
             self.address = owner_to_address(self.owner)
 
-        self.api_url = "https://arweave.net"
+        self.api_url = API_URL
         self.balance = 0
         
     def get_balance(self):
@@ -101,7 +103,7 @@ class Transaction(object):
         self.target = kwargs.get('target', '')
         self.to = kwargs.get('to', '')
         
-        self.api_url = "https://arweave.net"
+        self.api_url = API_URL
         
         reward = kwargs.get('reward', None)
         if reward is not None:
@@ -188,7 +190,8 @@ class Transaction(object):
     def send(self):
         url = "{}/tx".format(self.api_url)
 
-        response = requests.post(url, data=self.json_data)
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        response = requests.post(url, data=self.json_data, headers=headers)
 
         logger.error("{}\n\n{}".format(response.text, self.json_data))
 
@@ -198,7 +201,7 @@ class Transaction(object):
             logger.error("{}\n\n{}".format(response.text, self.json_data))
             
         return self.last_tx    
-    
+
     @property
     def json_data(self):
         data = {
@@ -262,7 +265,6 @@ class Transaction(object):
         else:
             logger.error(response.text)
 
-
     def load_json(self, json_str):
         json_data = json.loads(json_str)
         
@@ -279,7 +281,88 @@ class Transaction(object):
         self.data_tree = json_data.get('data_tree', [])
         
         logger.debug(json_data)
-        
+
+
+def arql(wallet, query):
+    """
+    Creat your query like so:
+    query = {
+        "op": "and",
+          "expr1": {
+            "op": "equals",
+            "expr1": "from",
+            "expr2": "hnRI7JoN2vpv__w90o4MC_ybE9fse6SUemwQeY8hFxM"
+          },
+          "expr2": {
+            "op": "or",
+            "expr1": {
+              "op": "equals",
+              "expr1": "type",
+              "expr2": "post"
+            },
+            "expr2": {
+              "op": "equals",
+              "expr1": "type",
+              "expr2": "comment"
+            }
+          }
+    :param wallet:
+    :param query:
+    :return list of Transaction instances:
+    """
+
+    data = json.dumps(query)
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    response = requests.post("{}/arql".format(API_URL), data=data, headers=headers)
+
+    if response.status_code == 200:
+        transaction_ids = json.loads(response.text)
+
+        return transaction_ids
+
+    return None
+
+
+def arql_with_transaction_data(wallet, query):
+    """
+    Creat your query like so:
+    query = {
+        "op": "and",
+          "expr1": {
+            "op": "equals",
+            "expr1": "from",
+            "expr2": "hnRI7JoN2vpv__w90o4MC_ybE9fse6SUemwQeY8hFxM"
+          },
+          "expr2": {
+            "op": "or",
+            "expr1": {
+              "op": "equals",
+              "expr1": "type",
+              "expr2": "post"
+            },
+            "expr2": {
+              "op": "equals",
+              "expr1": "type",
+              "expr2": "comment"
+            }
+          }
+    :param wallet:
+    :param query:
+    :return list of Transaction instances:
+    """
+
+    transaction_ids = arql(wallet, query)
+    if transaction_ids:
+        transactions = []
+        for transaction_id in transaction_ids:
+            tx = Transaction(wallet, id=transaction_id)
+            tx.get_transaction()
+            tx.get_data()
+
+            transactions.append(tx)
+
+    return None
+
 
 
 
