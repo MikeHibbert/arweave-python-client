@@ -30,7 +30,7 @@ import arweave
 wallet_file_path = "/some/folder/on/your/system"
 wallet = arweave.Wallet(wallet_file_path)
 
-transaction = Transaction(wallet, quantity=0.3, to='<some wallet address')
+transaction = arweave.Transaction(wallet, quantity=0.3, to='<some wallet address')
 transaction.sign()
 transaction.send()
 ```
@@ -86,3 +86,35 @@ transaction.api_url = 'some specific node ip/address and port'
 
 ```
 
+## Arql
+You can now perform searches using the arql method:
+```buildoutcfg
+import arweave
+
+wallet_file_path = "/some/folder/on/your/system"
+wallet = arweave.Wallet(wallet_file_path)
+
+transaction_ids = aweave.arql(
+    wallet, 
+    {
+        "op": "equals",
+        "expr1": "from",
+        "expr2": "Some owner address"
+    })
+```
+
+Alternatively, you can use a the helper method arql_with_transaction_data() to get all transaction ids as well as all the data stored in the blockchain
+```buildoutcfg
+import arweave
+
+wallet_file_path = "/some/folder/on/your/system"
+wallet = arweave.Wallet(wallet_file_path)
+
+transactions = aweave.arql_with_transaction_data(
+    wallet, 
+    {
+        "op": "equals",
+        "expr1": "from",
+        "expr2": "Some owner address"
+    })
+```
