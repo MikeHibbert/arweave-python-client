@@ -15,7 +15,7 @@ def run_test(jwk_file):
 
     logger.debug(balance)
     data = "test"
-    with open("Mining On The Arweave.pdf", "rb") as pdf_file:
+    with open("testfile0.bin", "rb") as pdf_file:
         data = pdf_file.read()
 
     tx = Transaction(wallet=wallet, data=data)
@@ -36,14 +36,14 @@ def run_test(jwk_file):
     # if tx.data_root != DATA_ROOT:
     #     raise Exception("Data root does not match expected result!")
 
-    tx = Transaction(wallet, id='HMDsP8HmP4KOsSYcKvFXXkj8hax-YD53tQC24VamgLo')
-
-    tx.get_transaction()
-
-    tx.get_data()
-
-    logger.info(tx.data)
-    logger.info(tx.data_root)
+    # tx = Transaction(wallet, id='HMDsP8HmP4KOsSYcKvFXXkj8hax-YD53tQC24VamgLo')
+    #
+    # tx.get_transaction()
+    #
+    # tx.get_data()
+    #
+    # logger.info(tx.data)
+    # logger.info(tx.data_root)
 
     # if tx.data != DATA:
     #     raise Exception("Data does not match expected result!")
@@ -74,6 +74,8 @@ def run_test(jwk_file):
 
     if len(transactions) == 0:
         raise Exception("AQRL search failed to find any transactions")
+
+
 
 
 if __name__ == "__main__":

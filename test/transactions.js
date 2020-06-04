@@ -29,7 +29,7 @@ const run_test = async function() {
     const jwk = JSON.parse(text);
 
 
-    const data = fs.readFileSync("/home/mike/Documents/python/arweave-python-client/arweave-python-client/test/Mining On The Arweave.pdf");
+    const data = fs.readFileSync("/home/mike/Documents/python/arweave-python-client/arweave-python-client/test/testfile0.bin");
 
     let transaction = await arweave.createTransaction({
         data: data

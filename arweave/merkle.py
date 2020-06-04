@@ -46,9 +46,14 @@ def compute_root_hash(data):
 
     while len(nodes) > 1:
         next_nodes = []
-        for i in range(0, len(nodes), 2):
+
+        nodes_lenth = len(nodes)
+        for i in range(0, nodes_lenth, 2):
+            left = nodes[i]
+            right = None if i+1 > (nodes_lenth-1) else nodes[i+1]
+
             next_nodes.append(
-                hash_branch(nodes[i], nodes[i+1])
+                hash_branch(left, right)
             )
 
         nodes = next_nodes
