@@ -18,14 +18,14 @@ def run_test(jwk_file):
     with open("testfile0.bin", "rb") as pdf_file:
         data = pdf_file.read()
 
-    tx = Transaction(wallet=wallet, data=data)
+    tx = Transaction(wallet=wallet, data=data, quantity=0.3)
 
     tx.add_tag('key1', 'value1');
     tx.add_tag('key2', 'value2');
 
     tx.sign()
 
-    tx.send()
+    #tx.send()
 
     logger.info(tx.id)
     logger.info(tx.data_root)

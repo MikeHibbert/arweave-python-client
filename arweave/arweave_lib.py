@@ -74,6 +74,10 @@ class Wallet(object):
         return self.last_tx
 
 
+class ArweaveTransactionException(Exception):
+    pass
+
+
 class Transaction(object):
     def __init__(self, wallet, **kwargs):
         self.jwk_data = wallet.jwk_data
@@ -84,8 +88,6 @@ class Transaction(object):
         self.last_tx = wallet.get_last_transaction_id()
         self.owner = self.jwk_data.get('n')
         self.tags = []
-        self.quantity = kwargs.get('quantity', '0')
-
         self.format = kwargs.get('format', 2)
         
         data = kwargs.get('data', '')
@@ -102,6 +104,17 @@ class Transaction(object):
 
         self.target = kwargs.get('target', '')
         self.to = kwargs.get('to', '')
+
+        if self.target == '' and self.to != '':
+            self.target = self.to
+
+        self.quantity = kwargs.get('quantity', '0')
+        if float(self.quantity) > 0:
+            if self.target == '':
+                raise ArweaveTransactionException("Unable to send {} AR without specifying a target address".format(self.quantity))
+
+            # convert to winston
+            self.quantity = ar_to_winston(float(self.quantity))
         
         self.api_url = API_URL
         
