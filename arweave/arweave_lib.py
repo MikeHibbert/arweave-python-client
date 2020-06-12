@@ -188,7 +188,7 @@ class Transaction(object):
             signature_data_list = [
                 "2".encode(),
                 base64url_decode(self.jwk_data['n'].encode()),
-                base64url_decode(self.target),
+                base64url_decode(self.target.encode()),
                 self.quantity.encode(),
                 self.reward.encode(),
                 base64url_decode(self.last_tx.encode()),

@@ -18,7 +18,7 @@ def run_test(jwk_file):
     with open("testfile0.bin", "rb") as pdf_file:
         data = pdf_file.read()
 
-    tx = Transaction(wallet=wallet, data=data, quantity=0.3)
+    tx = Transaction(wallet, quantity=0.1, target="s25AKziady2LpUI9YUNOUBPFXwS_5tyLnBckEGLM66w")
 
     tx.add_tag('key1', 'value1');
     tx.add_tag('key2', 'value2');
