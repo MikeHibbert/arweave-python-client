@@ -35,6 +35,9 @@ transaction.sign()
 transaction.send()
 ```
 
+#####ATTENTION! quantity is in AR and is automatically converted to Winston before sending
+
+
 To check the status of a transaction after sending:
 ```buildoutcfg
 status = transaction.get_status()
