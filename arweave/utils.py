@@ -50,5 +50,5 @@ def winston_to_ar(winston_str):
 
 def ar_to_winston(ar_amount):
     ar_str = "{:.12f}".format(ar_amount)
-    return ar_str.replace('.','')
+    return ar_str.replace('.','').lstrip("0")
 

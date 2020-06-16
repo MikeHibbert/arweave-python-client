@@ -28,6 +28,9 @@ logger = logging.getLogger(__name__)
 TRANSACTION_DATA_LIMIT_IN_BYTES = 2000000
 API_URL = "https://arweave.net"
 
+class ArweaveTransactionException(Exception):
+    pass
+
 
 class Wallet(object):
     HASH = 'sha256'
@@ -70,12 +73,13 @@ class Wallet(object):
 
         if response.status_code == 200:
             self.last_tx = response.text
+        else:
+            raise ArweaveTransactionException(response.text)
             
         return self.last_tx
 
 
-class ArweaveTransactionException(Exception):
-    pass
+
 
 
 class Transaction(object):
@@ -98,8 +102,13 @@ class Transaction(object):
             self.data = base64url_encode(data.encode('ascii'))
 
         self.data_size = len(data)
-        root_hash = compute_root_hash(data)
-        self.data_root = base64url_encode(root_hash)
+
+        if self.data_size > 0:
+            root_hash = compute_root_hash(data)
+            self.data_root = base64url_encode(root_hash)
+        else:
+            self.data_root = ""
+
         self.data_tree = []
 
         self.target = kwargs.get('target', '')
@@ -189,7 +198,7 @@ class Transaction(object):
                 "2".encode(),
                 base64url_decode(self.jwk_data['n'].encode()),
                 base64url_decode(self.target.encode()),
-                self.quantity.encode(),
+                str(self.quantity).encode(),
                 self.reward.encode(),
                 base64url_decode(self.last_tx.encode()),
                 tag_list,
@@ -203,8 +212,10 @@ class Transaction(object):
     def send(self):
         url = "{}/tx".format(self.api_url)
 
-        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        response = requests.post(url, data=self.json_data, headers=headers)
+        headers = {'Content-Type': 'application/json', 'Accept': 'text/plain'}
+
+        json_data = self.json_data
+        response = requests.post(url, data=json_data, headers=headers)
 
         logger.error("{}\n\n{}".format(response.text, self.json_data))
 
@@ -233,7 +244,10 @@ class Transaction(object):
             self.encode_tags()
             data['tags'] = self.tags
             data['format'] = 2
-            data['data_root'] = self.data_root.decode()
+            if len(self.data_root) > 0:
+                data['data_root'] = self.data_root.decode()
+            else:
+                data['data_root'] = ""
             data['data_size'] = str(self.data_size)
             data['data_tree'] = []
 

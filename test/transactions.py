@@ -18,14 +18,15 @@ def run_test(jwk_file):
     with open("testfile0.bin", "rb") as pdf_file:
         data = pdf_file.read()
 
-    tx = Transaction(wallet, quantity=0.1, target="s25AKziady2LpUI9YUNOUBPFXwS_5tyLnBckEGLM66w")
+    tx = Transaction(wallet, quantity=0.001, target="OFD5dO06Wdurb4w5TTenzkw1PacATOP-6lAlfAuRZFk")
 
-    tx.add_tag('key1', 'value1');
-    tx.add_tag('key2', 'value2');
+    tx.api_url = 'http://188.166.200.45:1984'
+    #tx.add_tag('key1', 'value1');
+    #tx.add_tag('key2', 'value2');
 
     tx.sign()
 
-    #tx.send()
+    tx.send()
 
     logger.info(tx.id)
     logger.info(tx.data_root)
@@ -51,29 +52,29 @@ def run_test(jwk_file):
     # if tx.data_root != DATA_ROOT:
     #     raise Exception("Data root does not match expected result!")
 
-    transaction_ids = arql(
-        wallet,
-        {
-            "op": "equals",
-            "expr1": "from",
-            "expr2": "OFD5dO06Wdurb4w5TTenzkw1PacATOP-6lAlfAuRZFk"
-        }
-    )
-
-    if len(transaction_ids) == 0:
-        raise Exception("AQRL search failed to find any transactions")
-
-    transactions = arql_with_transaction_data(
-        wallet,
-        {
-            "op": "equals",
-            "expr1": "from",
-            "expr2": "OFD5dO06Wdurb4w5TTenzkw1PacATOP-6lAlfAuRZFk"
-        }
-    )
-
-    if len(transactions) == 0:
-        raise Exception("AQRL search failed to find any transactions")
+    # transaction_ids = arql(
+    #     wallet,
+    #     {
+    #         "op": "equals",
+    #         "expr1": "from",
+    #         "expr2": "OFD5dO06Wdurb4w5TTenzkw1PacATOP-6lAlfAuRZFk"
+    #     }
+    # )
+    #
+    # if len(transaction_ids) == 0:
+    #     raise Exception("AQRL search failed to find any transactions")
+    #
+    # transactions = arql_with_transaction_data(
+    #     wallet,
+    #     {
+    #         "op": "equals",
+    #         "expr1": "from",
+    #         "expr2": "OFD5dO06Wdurb4w5TTenzkw1PacATOP-6lAlfAuRZFk"
+    #     }
+    # )
+    #
+    # if len(transactions) == 0:
+    #     raise Exception("AQRL search failed to find any transactions")
 
 
 
