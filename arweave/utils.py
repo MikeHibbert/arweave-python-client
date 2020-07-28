@@ -52,3 +52,21 @@ def ar_to_winston(ar_amount):
     ar_str = "{:.12f}".format(ar_amount)
     return ar_str.replace('.','').lstrip("0")
 
+
+def concat_buffers(buffers):
+    total_length = 0
+
+    for buffer in buffers:
+        total_length += len(buffer)
+
+    offset = 0
+
+    temp = b'\x00' * total_length
+    for buffer in buffers:
+        for i in range(len(buffer)):
+            temp[i + offset] = buffer[i]
+
+        offset += len(buffer)
+
+    return temp
+

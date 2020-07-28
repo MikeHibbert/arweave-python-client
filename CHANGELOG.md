@@ -2,3 +2,4 @@
 --------------------
 
 - started using zest releaser and added CHANGELOG.md
+- added support for chunk uploading
