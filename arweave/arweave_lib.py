@@ -20,8 +20,7 @@ from .utils import (
     decode_tag
 )
 from .deep_hash import deep_hash
-from .merkle import compute_root_hash
-
+from .merkle import compute_root_hash, generate_transaction_chunks
 
 logger = logging.getLogger(__name__)
 
@@ -79,9 +78,6 @@ class Wallet(object):
         return self.last_tx
 
 
-
-
-
 class Transaction(object):
     def __init__(self, wallet, **kwargs):
         self.jwk_data = wallet.jwk_data
@@ -93,56 +89,65 @@ class Transaction(object):
         self.owner = self.jwk_data.get('n')
         self.tags = []
         self.format = kwargs.get('format', 2)
+
+        self.api_url = API_URL
+        self.chunks = None
         
         data = kwargs.get('data', '')
+        self.data_size = len(data)
 
         if type(data) is bytes:
             self.data = base64url_encode(data)
         else:
             self.data = base64url_encode(data.encode('ascii'))
 
-        self.data_size = len(data)
+        self.file_handler = kwargs.get('file_handler', None)
+        if self.file_handler:
+            self.uses_uploader = True
+            self.data_size = os.stat(kwargs['file_path']).st_size
+        else:
+            self.uses_uploader = False
 
-        if self.data_size > 0:
-            root_hash = compute_root_hash(data)
-            self.data_root = base64url_encode(root_hash)
+        if kwargs.get('transaction'):
+            self.from_serialized_transaction(kwargs.get('transaction'))
         else:
             self.data_root = ""
 
-        self.data_tree = []
+            self.data_tree = []
 
-        self.target = kwargs.get('target', '')
-        self.to = kwargs.get('to', '')
+            self.target = kwargs.get('target', '')
+            self.to = kwargs.get('to', '')
 
-        if self.target == '' and self.to != '':
-            self.target = self.to
+            if self.target == '' and self.to != '':
+                self.target = self.to
 
-        self.quantity = kwargs.get('quantity', '0')
-        if float(self.quantity) > 0:
-            if self.target == '':
-                raise ArweaveTransactionException("Unable to send {} AR without specifying a target address".format(self.quantity))
+            self.quantity = kwargs.get('quantity', '0')
+            if float(self.quantity) > 0:
+                if self.target == '':
+                    raise ArweaveTransactionException("Unable to send {} AR without specifying a target address".format(self.quantity))
 
-            # convert to winston
-            self.quantity = ar_to_winston(float(self.quantity))
-        
-        self.api_url = API_URL
-        
-        reward = kwargs.get('reward', None)
-        if reward is not None:
-            self.reward = reward  
+                # convert to winston
+                self.quantity = ar_to_winston(float(self.quantity))
+
+            reward = kwargs.get('reward', None)
+            if reward is not None:
+                self.reward = reward
+
+            self.signature = ''
+            self.status = None
+
+    def from_serialized_transaction(self, transaction_json):
+        if type(transaction_json) == str:
+            self.load_json(transaction_json)
         else:
-            self.reward = self.get_reward(self.data)
-            
-        self.signature = ''
-        self.status = None
+            raise ArweaveTransactionException("Please supply a string containing json to initialize a serialized transaction")
         
-    def get_reward(self, data, target_address=None):
-        data_length = len(data)
-        
-        url = "{}/price/{}".format(self.api_url,data_length)
+    def get_reward(self, data_size, target_address=None):
+
+        url = "{}/price/{}".format(self.api_url,data_size)
         
         if target_address:
-            url = "{}/price/{}/{}".format(self.api_url, data_length, target_address)
+            url = "{}/price/{}/{}".format(self.api_url, data_size, target_address)
 
         response = requests.get(url)
 
@@ -175,6 +180,8 @@ class Transaction(object):
             self.id = self.id.decode()
         
     def get_signature_data(self):
+        self.reward = self.get_reward(self.data_size, target_address=self.target if len(self.target) > 0 else None)
+
         if self.format == 1:
             tag_str = ""
 
@@ -192,6 +199,9 @@ class Transaction(object):
             signature_data = owner + target + data + quantity + reward + last_tx + tag_str.encode()
 
         if self.format == 2:
+            if self.uses_uploader:
+                self.prepare_chunks()
+
             tag_list = [[tag['name'].encode(), tag['value'].encode()] for tag in self.tags]
 
             signature_data_list = [
@@ -250,8 +260,12 @@ class Transaction(object):
                 data['data_root'] = ""
             data['data_size'] = str(self.data_size)
             data['data_tree'] = []
+            # data['chunks'] = [chunk.to_dict() for chunk in self.chunks.get('chunks', [])]
+            # data['proofs'] = [proof.to_dict() for proof in self.chunks.get('proofs', [])]
 
         jsons = json.dumps(data)
+
+        logger.error(jsons)
         
         return jsons.replace(' ','')
     
@@ -282,6 +296,16 @@ class Transaction(object):
             
         return tx
 
+    def get_price(self):
+        u = "{}/price/{}".format(self.api_url, self.data_size)
+
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            return winston_to_ar(int(response.text))
+        else:
+            logger.error(response.text)
+
     def get_data(self):
         url = "{}/tx/{}/data".format(self.api_url, self.id)
 
@@ -308,6 +332,39 @@ class Transaction(object):
         self.data_tree = json_data.get('data_tree', [])
         
         logger.debug(json_data)
+
+    def prepare_chunks(self):
+        if not self.chunks:
+            self.chunks = generate_transaction_chunks(self.file_handler)
+            self.data_root = base64url_encode(self.chunks.get('data_root'))
+
+        if not self.chunks:
+            self.chunks = {
+                "chunks": [],
+                "data_root": b'',
+                "proof": []
+            }
+
+            self.data_root = ''
+
+    def get_chunk(self, idx):
+        if self.chunks is None:
+            raise ArweaveTransactionException("Chunks have not been prepared")
+
+        proof = self.chunks.get('proofs')[idx]
+        chunk = self.chunks.get('chunks')[idx]
+
+        self.file_handler.seek(chunk.min_byte_range)
+
+        chunk_data = self.file_handler.read(chunk.data_size)
+
+        return {
+            "data_root": self.data_root.decode(),
+            "data_size": str(self.data_size),
+            "data_path": base64url_encode(proof.proof),
+            "offset": str(proof.offset),
+            "chunk": base64url_encode(chunk_data)
+        }
 
 
 def arql(wallet, query):

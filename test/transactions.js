@@ -9,6 +9,7 @@ const run_test = async function() {
         protocol: 'https',  // Network protocol http or https, defaults to http
         timeout: 200000,     // Network request timeouts in milliseconds
         logging: true,     // Enable network request logging
+        logger: console.log
     });
 
     let wallet_file = wallet_path;
@@ -29,17 +30,25 @@ const run_test = async function() {
     const jwk = JSON.parse(text);
 
 
-    // const data = fs.readFileSync("/home/mike/Documents/python/arweave-python-client/arweave-python-client/test/testfile0.bin");
+    const data = fs.readFileSync("/home/mike/Documents/python/arweave-python-client/arweave-python-client/test/testfile0.bin");
 
     let transaction = await arweave.createTransaction({
-        target: "OFD5dO06Wdurb4w5TTenzkw1PacATOP-6lAlfAuRZFk",
-        quantity: arweave.ar.arToWinston('0.1')
+        data: data
     }, jwk);
+
+    await arweave.transactions.sign(transaction, jwk);
+
+    const uploader = await arweave.transactions.getUploader(transaction);
+
+    while (!uploader.isComplete) {
+        await uploader.uploadChunk();
+        console.log(`${uploader.pctComplete}% complete, ${uploader.uploadedChunks}/${uploader.totalChunks}`);
+    }
 
     // transaction.addTag('key1', 'value1');
     // transaction.addTag('key2', 'value2');
 
-    await arweave.transactions.sign(transaction, jwk)
+    
 
     const result = await arweave.transactions.post(transaction);
 

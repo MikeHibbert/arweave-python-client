@@ -1,6 +1,7 @@
 import os
 import logging
 from arweave.arweave_lib import Wallet, Transaction, arql, arql_with_transaction_data
+from arweave.transaction_uploader import get_uploader
 
 logger = logging.getLogger(__name__)
 
@@ -15,21 +16,32 @@ def run_test(jwk_file):
 
     logger.debug(balance)
     data = "test"
-    with open("testfile0.bin", "rb") as pdf_file:
-        data = pdf_file.read()
+    with open("testfile0.bin", "rb") as file_handler:
+        tx = Transaction(wallet, file_handler=file_handler, file_path="testfile0.bin")
+        tx.add_tag('Content-Type', 'application/pdf')
+        tx.sign()
+        uploader = get_uploader(tx, file_handler)
 
-    tx = Transaction(wallet, quantity=0.001, target="OFD5dO06Wdurb4w5TTenzkw1PacATOP-6lAlfAuRZFk")
+        while not uploader.is_complete:
+            uploader.upload_chunk()
+            logger.info("{}% complete, {}/{}".format(
+                uploader.pct_complete, uploader.uploaded_chunks, uploader.total_chunks
+            ))
 
-    tx.api_url = 'http://188.166.200.45:1984'
-    #tx.add_tag('key1', 'value1');
-    #tx.add_tag('key2', 'value2');
+        logger.info("{} uploaded successfully".format(tx.id))
 
-    tx.sign()
-
-    tx.send()
-
-    logger.info(tx.id)
-    logger.info(tx.data_root)
+    # tx = Transaction(wallet, quantity=0.001, target="OFD5dO06Wdurb4w5TTenzkw1PacATOP-6lAlfAuRZFk")
+    #
+    # tx.api_url = 'http://188.166.200.45:1984'
+    # #tx.add_tag('key1', 'value1');
+    # #tx.add_tag('key2', 'value2');
+    #
+    # tx.sign()
+    #
+    # tx.send()
+    #
+    # logger.info(tx.id)
+    # logger.info(tx.data_root)
 
     # if tx.data != DATA:
     #     raise Exception("Data does not match expected result!")

@@ -62,11 +62,12 @@ def concat_buffers(buffers):
     offset = 0
 
     temp = b'\x00' * total_length
+    temp = bytearray(temp)
     for buffer in buffers:
         for i in range(len(buffer)):
             temp[i + offset] = buffer[i]
 
         offset += len(buffer)
 
-    return temp
+    return bytes(temp)
 

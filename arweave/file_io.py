@@ -1,15 +1,9 @@
-def read_file_chunks(file_handler, chunk_size):
+def read_file_chunks(file_handler, chunk_size, seek_to=0):
     """A generator function to read files one chunk at a time"""
+    while True:
+        data = file_handler.read(chunk_size)
 
-    chunk = []
+        if not data:
+            break
 
-    for line in file_handler:
-        chunk.append(line)
-
-        if len(chunk) == chunk_size:
-            yield chunk
-            chunk = []
-
-    # don't forget to yield the last block
-    if chunk:
-        yield chunk
+        yield data
