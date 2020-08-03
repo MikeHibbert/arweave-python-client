@@ -260,8 +260,6 @@ class Transaction(object):
                 data['data_root'] = ""
             data['data_size'] = str(self.data_size)
             data['data_tree'] = []
-            # data['chunks'] = [chunk.to_dict() for chunk in self.chunks.get('chunks', [])]
-            # data['proofs'] = [proof.to_dict() for proof in self.chunks.get('proofs', [])]
 
         jsons = json.dumps(data)
 
