@@ -1,5 +1,4 @@
-1.0.2 (2020-08-03)
+1.0.3 (unreleased)
 ------------------
 
-- started using zest releaser and added CHANGELOG.md
-- added support for chunk uploading
+- tweaks and bug fixes for chunk uploading and get_data method

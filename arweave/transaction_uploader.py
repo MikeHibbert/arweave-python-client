@@ -1,5 +1,4 @@
 import json
-import copy
 import arrow
 import random
 import time
@@ -9,6 +8,10 @@ from jose.utils import base64url_encode, base64url_decode
 from .arweave_lib import Transaction
 from .utils import *
 from .merkle import validate_path, CHUNK_SIZE
+from .arweave_lib import API_URL
+
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE, SIG_DFL)
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +22,11 @@ FATAL_CHUNK_UPLOAD_ERRORS = ['invalid_json', 'chunk_too_big', 'data_path_too_big
 ERROR_DELAY = 1000 * 40
 
 
-class SerializedUploader:
+class TransactionUploaderException(Exception):
+    pass
+
+
+class TransactionUploader:
     def __init__(self, *args, **kwargs):
         self.chunk_index = kwargs.get('chunk_index', 0)
         self.tx_posted = kwargs.get('tx_posted', False)
@@ -27,32 +34,6 @@ class SerializedUploader:
         self.last_request_time_end = kwargs.get('last_request_time_end', 0)
         self.last_response_status = kwargs.get('last_response_status', 0)
         self.last_response_error = kwargs.get('last_response_error', '')
-        self.json = kwargs.get('json')
-
-        if self.json is not None:
-            self.init_from_json()
-
-    def init_from_json(self):
-        serialised = json.loads(self.json)
-
-        self.chunk_index = serialised.chunk_index
-        self.tx_posted = serialised.tx_posted
-        self.transaction = serialised.transaction
-        self.last_request_time_end = serialised.last_request_time_end
-        self.last_response_status = serialised.last_response_status
-        self.last_response_error = serialised.last_response_error
-
-
-
-
-
-class TransactionUploaderException(Exception):
-    pass
-
-
-class TransactionUploader(SerializedUploader):
-    def __init__(self, *args, **kwargs):
-        super(TransactionUploader, self).__init__(*args, **kwargs)
         self.transaction.data = b''  # zero out data for serialization
         self.file_handler = kwargs['file_handler']
         self.total_errors = 0
@@ -73,6 +54,29 @@ class TransactionUploader(SerializedUploader):
     @property
     def pct_complete(self):
         return int("{}".format(self.uploaded_chunks / self.total_chunks * 100).split('.')[0])
+
+    def to_json(self):
+        data = {
+            "chunkIndex": self.chunk_index,
+            "transaction": self.transaction.to_dict(),
+            "lastRequestTimeEnd": self.last_request_time_end,
+            "lastResponseStatus": self.last_response_status,
+            "lastResponseError": self.last_response_error,
+            "lastResponseError": self.tx_posted
+        }
+
+        return json.dumps(data)
+
+    def load_from_json(self, data):
+        if type(data) == str:
+            data = json.loads(data)
+
+        self.chunk_index = data['chunkIndex']
+        self.transaction = Transaction.from_serialized_transaction(data['transaction'])
+        self.last_request_time_end = arrow.now(data['lastRequestTimeEnd']).timestamp
+        self.last_response_status = data['lastResponseStatus']
+        self.last_response_error = data['lastResponseError']
+        self.tx_posted = data['lastResponseError']
 
     def upload_chunk(self):
         if self.is_complete:
@@ -128,12 +132,12 @@ class TransactionUploader(SerializedUploader):
 
         response = requests.post(url, data=json.dumps(chunk), headers=headers)
 
-        logger.error("{}\n\n{}".format(response.text, self.transaction.json_data))
+        # logger.error("{}\n\n{}".format(response.text, self.transaction.json_data))
 
         if response.status_code == 200:
             logger.debug("RESPONSE 200: {}".format(response.text))
         else:
-            logger.error("{}\n\n{}".format(response.text, self.transaction.json_data))
+            logger.error("{}".format(response.text))
 
             return {"status": -1, "data": {"error": response.text}}
 
@@ -208,6 +212,72 @@ class TransactionUploader(SerializedUploader):
         self.tx_posted = True
 
 
+class TransactionDownloaderException(Exception):
+    pass
+
+
+def get_transaction_offset(tx_id):
+    url = "{}/tx/{}/offset".format(API_URL, tx_id)
+
+    response = requests.get(url)
+    response_json = json.loads(response.text)
+
+    if response.status_code == 200:
+        return int(response_json.get("data"))
+    else:
+        raise TransactionDownloaderException(
+            "Unable to get transaction offset: {}".format(response_json.get("error"))
+        )
+
+def get_chunk(offset):
+    url = "{}/chunk/{}".format(API_URL, offset)
+
+    response = requests.get(url)
+    response_json = json.loads(response.text)
+
+    if response.status_code == 200:
+        return response_json.get("data")
+    else:
+        raise TransactionDownloaderException(
+            "Unable to get chunk: {}".format(response_json.get("error"))
+        )
+
+
+def get_chunk_data(offset):
+    chunk = get_chunk(offset)
+    buf = base64url_decode(chunk.get('chunk'))
+    return buf
+
+
+def first_chunk_offset(offset_response):
+    return int(offset_response.get('offset')) - int(offset_response.get('size')) + 1
+
+
+def download_chunked_data(tx_id, file_handler=None):
+    offset_response = get_transaction_offset(tx_id)
+
+    size = int(offset_response.get('size'))
+    end_offset = int(offset_response.get('offset'))
+    start_offset = end_offset - size + 1
+
+    byte_offset = 0
+
+    if file_handler is None:
+        data = bytearray(length=size)
+
+    while start_offset + byte_offset < end_offset:
+        chunk_data = get_chunk_data(start_offset + byte_offset)
+
+        if file_handler is None:
+            data[byte_offset:] = byte(chunk_data)
+        else:
+            file_handler.seek(byte_offset)
+            file_handler.write(chunk_data)
+
+        
+
+
+
 def from_serialized(self, file_handler, json_str):
     if json_str is None:
         raise TransactionUploaderException("Serialized object does not match expected format")
@@ -225,12 +295,14 @@ def from_serialized(self, file_handler, json_str):
     )
 
 
-def from_transaction_id(file_handler, transaction):
-    url = "{}/tx/{}".format(transaction.api_url, transaction.id)
+def from_transaction_id(file_handler, transaction_str, wallet, api_url=API_URL):
+    tx = json.loads(transaction_str)
+
+    url = "{}/tx/{}".format(api_url, tx.get('id'))
 
     headers = {'Content-Type': 'application/json', 'Accept': 'text/plain'}
 
-    response = requests.post(url, headers=headers)
+    response = requests.get(url, headers=headers)
 
     logger.error("{}".format(response.text))
 
@@ -238,14 +310,10 @@ def from_transaction_id(file_handler, transaction):
         logger.debug("RESPONSE 200: {}".format(response.text))
     else:
         raise TransactionUploaderException("Tx {} not found: {} {}".format(
-            transaction.id,
+            tx.get('id'),
             response.status_code,
             response.text)
         )
-
-    transaction = json.loads(response.text)
-
-    transaction.data = b''
 
     serialized = TransactionUploader(
         tx_posted=True,
@@ -255,7 +323,8 @@ def from_transaction_id(file_handler, transaction):
         last_response_status=0,
         file_handler=file_handler,
         transaction=Transaction(
-            transaction=transaction
+            wallet,
+            transaction=response.text
         )
     )
 

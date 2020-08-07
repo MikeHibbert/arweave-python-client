@@ -1,7 +1,7 @@
 import os
 import logging
 from arweave.arweave_lib import Wallet, Transaction, arql, arql_with_transaction_data
-from arweave.transaction_uploader import get_uploader
+from arweave.transaction_uploader import get_uploader, from_transaction_id
 
 logger = logging.getLogger(__name__)
 
@@ -16,10 +16,18 @@ def run_test(jwk_file):
 
     logger.debug(balance)
     data = "test"
-    with open("testfile0.bin", "rb") as file_handler:
-        tx = Transaction(wallet, file_handler=file_handler, file_path="testfile0.bin")
-        tx.add_tag('Content-Type', 'application/pdf')
+
+    ubuntu_iso_tx = 'Vw5mrDkj39JZSpDjM8FiJHsMnUf_EXeQh9XYo7GJstI'
+
+    file_path = "/home/mike/Downloads/ubuntu-18.04.4-desktop-amd64.iso"
+    with open(file_path, "rb", buffering=0) as file_handler:
+        tx = Transaction(wallet, id=ubuntu_iso_tx,file_handler=file_handler, file_path=file_path)
+        tx.get_transaction()
+        # tx.add_tag('Content-Type', 'application/pdf')
         tx.sign()
+
+        logger.error("{} chunks".format(len(tx.chunks['chunks'])))
+
         uploader = get_uploader(tx, file_handler)
 
         while not uploader.is_complete:
@@ -29,6 +37,31 @@ def run_test(jwk_file):
             ))
 
         logger.info("{} uploaded successfully".format(tx.id))
+
+    tx_ids = arql(wallet, {
+        "op": "and",
+        "expr1": {
+            "op": "equals",
+            "expr1": "from",
+            "expr2": wallet.address
+        },
+        "expr2": {
+            "op": "equals",
+            "expr1": "Content-Type",
+            "expr2": "application/pdf"
+        }
+    })
+
+    logger.error(tx_ids)
+
+    for tx_id in tx_ids:
+        tx = Transaction(wallet, id=tx_id)
+
+        tx.get_transaction()
+
+        logger.error("got {}".format(tx_id))
+
+        # tx.get_data()
 
     # tx = Transaction(wallet, quantity=0.001, target="OFD5dO06Wdurb4w5TTenzkw1PacATOP-6lAlfAuRZFk")
     #

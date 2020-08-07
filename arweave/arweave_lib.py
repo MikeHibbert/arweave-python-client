@@ -3,6 +3,7 @@ import os
 import requests
 import logging
 import hashlib
+import psutil
 import arrow
 import nacl.bindings
 from jose import jwk
@@ -234,21 +235,20 @@ class Transaction(object):
         else:
             logger.error("{}\n\n{}".format(response.text, self.json_data))
             
-        return self.last_tx    
+        return self.last_tx
 
-    @property
-    def json_data(self):
+    def to_dict(self):
         data = {
-                 'data': self.data.decode(),
-                 'id': self.id.decode() if type(self.id) == bytes else self.id,
-                 'last_tx': self.last_tx,
-                 'owner': self.owner,
-                 'quantity': self.quantity,
-                 'reward': self.reward,
-                 'signature': self.signature.decode(),
-                 'tags': self.tags,
-                 'target': self.target
-                }
+            'data': self.data.decode(),
+            'id': self.id.decode() if type(self.id) == bytes else self.id,
+            'last_tx': self.last_tx,
+            'owner': self.owner,
+            'quantity': self.quantity,
+            'reward': self.reward,
+            'signature': self.signature.decode(),
+            'tags': self.tags,
+            'target': self.target
+        }
 
         if self.format == 2:
             self.encode_tags()
@@ -261,11 +261,17 @@ class Transaction(object):
             data['data_size'] = str(self.data_size)
             data['data_tree'] = []
 
-        jsons = json.dumps(data)
+        return data
 
-        logger.error(jsons)
+    @property
+    def json_data(self):
+        data = self.to_dict()
+
+        json_str = json.dumps(data)
+
+        logger.error(json_str)
         
-        return jsons.replace(' ','')
+        return json_str.replace(' ', '')
     
     def get_status(self):
         url = "{}/tx/{}/status".format(self.api_url, self.id)
@@ -305,7 +311,7 @@ class Transaction(object):
             logger.error(response.text)
 
     def get_data(self):
-        url = "{}/tx/{}/data".format(self.api_url, self.id)
+        url = "{}/{}/".format(self.api_url, self.id)
 
         response = requests.get(url)
 
@@ -313,6 +319,17 @@ class Transaction(object):
             self.data = base64url_decode(response.text.encode())
         else:
             logger.error(response.text)
+
+        response_dict = json.loads(response.text)
+
+        if response.status_code == 400 and response_dict.get('error') == "tx_data_too_big":
+            if int(self.data_size) > psutil.virtual_memory().available:
+                if self.file_handler is None:
+                    raise ArweaveTransactionException(
+                        "Please provide a file_handler to download this file as it is too large to download into memory"
+                    )
+                else:
+
 
     def load_json(self, json_str):
         json_data = json.loads(json_str)

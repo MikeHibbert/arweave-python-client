@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
   name="arweave-python-client",
   packages = ['arweave'], # this must be the same as the name above
-  version="1.0.2",
+  version="1.0.3",
   description="Client interface for sending transactions on the Arweave permaweb",
   author="Mike Hibbert",
   author_email="mike@hibbertitsolutions.co.uk",
@@ -22,5 +22,6 @@ setup(
     'pycrypto',
     'cryptography',
     'requests',
+    'psutil'
   ],
 )
