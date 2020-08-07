@@ -45,7 +45,7 @@ from arweave.transaction_uploader import get_uploader
 
 wallet = Wallet(jwk_file)
 
-with open("my_mahoosive_file.dat", "rb") as file_handler:
+with open("my_mahoosive_file.dat", "rb", buffering=0) as file_handler:
     tx = Transaction(wallet, file_handler=file_handler, file_path="/some/path/my_mahoosive_file.dat")
     tx.add_tag('Content-Type', 'application/dat')
     tx.sign()
@@ -59,7 +59,7 @@ with open("my_mahoosive_file.dat", "rb") as file_handler:
             uploader.pct_complete, uploader.uploaded_chunks, uploader.total_chunks
         ))
 ```
-NOTE: When uploading you only need to supply a file handle instead of reading in the data all at once. The data will be read progressively in small chunks
+NOTE: When uploading you only need to supply a file handle with buffering=0 instead of reading in the data all at once. The data will be read progressively in small chunks
 
 To check the status of a transaction after sending:
 ```buildoutcfg
