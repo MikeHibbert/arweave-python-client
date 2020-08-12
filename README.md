@@ -88,7 +88,7 @@ with open('myfile.pdf', 'r') as mypdf:
 ## Retrieving transactions/data
 To get the information about a transaction you can create a transaction object with the ID of that transaction:
 ```
-tx = Transaction(id=<your tx id>)
+tx = Transaction(wallet, id=<your tx id>)
 tx.get_transaction()
 ```
 

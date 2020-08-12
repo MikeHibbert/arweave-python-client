@@ -51,30 +51,30 @@ def run_test(jwk_file):
             "expr2": "application/pdf"
         }
     })
-    #
-    # logger.error(tx_ids)
-    #
-    # for tx_id in tx_ids:
-    #     tx = Transaction(wallet, id=tx_id)
-    #
-    #     tx.get_transaction()
-    #
-    #     logger.error("got {}".format(tx_id))
-    #
-    #     # tx.get_data()
 
-    tx = Transaction(wallet, data=b'HELLO TEST')
+    logger.error(tx_ids)
 
-    # tx.api_url = 'http://188.166.200.45:1984'
-    tx.add_tag('key1', 'value1');
-    tx.add_tag('key2', 'value2');
+    for tx_id in tx_ids:
+        tx = Transaction(wallet, id=tx_id)
 
-    tx.sign()
+        tx.get_transaction()
 
-    tx.send()
+        logger.error("got {}".format(tx_id))
+
+        # tx.get_data()
+
+    # tx = Transaction(wallet, data=b'HELLO TEST')
     #
-    logger.info(tx.id)
-    logger.info(tx.data_root)
+    # # tx.api_url = 'http://188.166.200.45:1984'
+    # tx.add_tag('key1', 'value1');
+    # tx.add_tag('key2', 'value2');
+    #
+    # tx.sign()
+    #
+    # tx.send()
+    # #
+    # logger.info(tx.id)
+    # logger.info(tx.data_root)
 
     # if tx.data != DATA:
     #     raise Exception("Data does not match expected result!")
