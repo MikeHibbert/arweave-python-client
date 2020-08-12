@@ -1,7 +1,7 @@
-1.0.6 (unreleased)
+1.0.6 (2020-08-12)
 ------------------
 
-- Nothing changed yet.
+- Replace pycrypto with pycryptodome for Python3 compatibility 
 
 
 1.0.5 (2020-08-12)
