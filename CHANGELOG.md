@@ -1,7 +1,7 @@
-1.0.9 (unreleased)
+1.0.9 (2020-08-12)
 ------------------
 
-- Nothing changed yet.
+- changed to use requests content not text member
 
 
 1.0.8 (2020-08-12)

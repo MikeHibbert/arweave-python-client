@@ -326,7 +326,7 @@ class Transaction(object):
         response = requests.get(url)
 
         if response.status_code == 200:
-            self.data = response.text
+            self.data = response.content
         else:
             logger.error(response.text)
 
