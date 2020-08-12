@@ -1,7 +1,7 @@
-1.0.8 (unreleased)
+1.0.8 (2020-08-12)
 ------------------
 
-- Nothing changed yet.
+- fix get_data encoding error
 
 
 1.0.7 (2020-08-12)
