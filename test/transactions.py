@@ -20,61 +20,61 @@ def run_test(jwk_file):
     ubuntu_iso_tx = 'Vw5mrDkj39JZSpDjM8FiJHsMnUf_EXeQh9XYo7GJstI'
 
     file_path = "/home/mike/Downloads/ubuntu-18.04.4-desktop-amd64.iso"
-    with open(file_path, "rb", buffering=0) as file_handler:
-        tx = Transaction(wallet, id=ubuntu_iso_tx,file_handler=file_handler, file_path=file_path)
-        tx.get_transaction()
-        # tx.add_tag('Content-Type', 'application/pdf')
-        tx.sign()
-
-        logger.error("{} chunks".format(len(tx.chunks['chunks'])))
-
-        uploader = get_uploader(tx, file_handler)
-
-        while not uploader.is_complete:
-            uploader.upload_chunk()
-            logger.info("{}% complete, {}/{}".format(
-                uploader.pct_complete, uploader.uploaded_chunks, uploader.total_chunks
-            ))
-
-        logger.info("{} uploaded successfully".format(tx.id))
-
-    tx_ids = arql(wallet, {
-        "op": "and",
-        "expr1": {
-            "op": "equals",
-            "expr1": "from",
-            "expr2": wallet.address
-        },
-        "expr2": {
-            "op": "equals",
-            "expr1": "Content-Type",
-            "expr2": "application/pdf"
-        }
-    })
-
-    logger.error(tx_ids)
-
-    for tx_id in tx_ids:
-        tx = Transaction(wallet, id=tx_id)
-
-        tx.get_transaction()
-
-        logger.error("got {}".format(tx_id))
-
-        # tx.get_data()
-
-    # tx = Transaction(wallet, quantity=0.001, target="OFD5dO06Wdurb4w5TTenzkw1PacATOP-6lAlfAuRZFk")
+    # with open(file_path, "rb", buffering=0) as file_handler:
+    #     tx = Transaction(wallet, id=ubuntu_iso_tx,file_handler=file_handler, file_path=file_path)
+    #     tx.get_transaction()
+    #     # tx.add_tag('Content-Type', 'application/pdf')
+    #     tx.sign()
     #
+    #     logger.error("{} chunks".format(len(tx.chunks['chunks'])))
+    #
+    #     uploader = get_uploader(tx, file_handler)
+    #
+    #     while not uploader.is_complete:
+    #         uploader.upload_chunk()
+    #         logger.info("{}% complete, {}/{}".format(
+    #             uploader.pct_complete, uploader.uploaded_chunks, uploader.total_chunks
+    #         ))
+    #
+    #     logger.info("{} uploaded successfully".format(tx.id))
+    #
+    # tx_ids = arql(wallet, {
+    #     "op": "and",
+    #     "expr1": {
+    #         "op": "equals",
+    #         "expr1": "from",
+    #         "expr2": wallet.address
+    #     },
+    #     "expr2": {
+    #         "op": "equals",
+    #         "expr1": "Content-Type",
+    #         "expr2": "application/pdf"
+    #     }
+    # })
+    #
+    # logger.error(tx_ids)
+    #
+    # for tx_id in tx_ids:
+    #     tx = Transaction(wallet, id=tx_id)
+    #
+    #     tx.get_transaction()
+    #
+    #     logger.error("got {}".format(tx_id))
+    #
+    #     # tx.get_data()
+
+    tx = Transaction(wallet, data=b'HELLO TEST')
+
     # tx.api_url = 'http://188.166.200.45:1984'
-    # #tx.add_tag('key1', 'value1');
-    # #tx.add_tag('key2', 'value2');
+    tx.add_tag('key1', 'value1');
+    tx.add_tag('key2', 'value2');
+
+    tx.sign()
+
+    tx.send()
     #
-    # tx.sign()
-    #
-    # tx.send()
-    #
-    # logger.info(tx.id)
-    # logger.info(tx.data_root)
+    logger.info(tx.id)
+    logger.info(tx.data_root)
 
     # if tx.data != DATA:
     #     raise Exception("Data does not match expected result!")
