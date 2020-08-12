@@ -1,7 +1,13 @@
-1.0.4 (unreleased)
+1.0.5 (unreleased)
 ------------------
 
 - Nothing changed yet.
+
+
+1.0.4 (2020-08-12)
+------------------
+
+- updated get_signature_data() to support old style data_root calculations
 
 
 1.0.3 (2020-08-07)

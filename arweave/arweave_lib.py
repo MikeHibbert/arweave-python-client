@@ -1,5 +1,6 @@
 import json
 import os
+import io
 import requests
 import logging
 import hashlib
@@ -183,6 +184,15 @@ class Transaction(object):
     def get_signature_data(self):
         self.reward = self.get_reward(self.data_size, target_address=self.target if len(self.target) > 0 else None)
 
+        if self.data_size > 0 and self.data_root == "":
+            if type(self.data) == str:
+                root_hash = compute_root_hash(io.StringIO(self.data))
+
+            if type(self.data) == bytes:
+                root_hash = compute_root_hash(io.BytesIO(self.data))
+
+            self.data_root = base64url_encode(root_hash)
+
         if self.format == 1:
             tag_str = ""
 
@@ -320,17 +330,9 @@ class Transaction(object):
         else:
             logger.error(response.text)
 
-        response_dict = json.loads(response.text)
-
-        if response.status_code == 400 and response_dict.get('error') == "tx_data_too_big":
-            if int(self.data_size) > psutil.virtual_memory().available:
-                if self.file_handler is None:
-                    raise ArweaveTransactionException(
-                        "Please provide a file_handler to download this file as it is too large to download into memory"
-                    )
-                else:
-                    pass
-
+            raise ArweaveTransactionException(
+                response.text
+            )
 
     def load_json(self, json_str):
         json_data = json.loads(json_str)
