@@ -38,28 +38,28 @@ def run_test(jwk_file):
     #
     #     logger.info("{} uploaded successfully".format(tx.id))
     #
-    tx_ids = arql(wallet, {
-        "op": "and",
-        "expr1": {
-            "op": "equals",
-            "expr1": "from",
-            "expr2": wallet.address
-        },
-        "expr2": {
-            "op": "equals",
-            "expr1": "Content-Type",
-            "expr2": "application/pdf"
-        }
-    })
-
-    logger.error(tx_ids)
-
-    for tx_id in tx_ids:
-        tx = Transaction(wallet, id=tx_id)
-
-        tx.get_transaction()
-
-        logger.error("got {}".format(tx_id))
+    # tx_ids = arql(wallet, {
+    #     "op": "and",
+    #     "expr1": {
+    #         "op": "equals",
+    #         "expr1": "from",
+    #         "expr2": wallet.address
+    #     },
+    #     "expr2": {
+    #         "op": "equals",
+    #         "expr1": "Content-Type",
+    #         "expr2": "application/pdf"
+    #     }
+    # })
+    #
+    # logger.error(tx_ids)
+    #
+    # for tx_id in tx_ids:
+    #     tx = Transaction(wallet, id=tx_id)
+    #
+    #     tx.get_transaction()
+    #
+    #     logger.error("got {}".format(tx_id))
 
         # tx.get_data()
 
@@ -82,14 +82,14 @@ def run_test(jwk_file):
     # if tx.data_root != DATA_ROOT:
     #     raise Exception("Data root does not match expected result!")
 
-    # tx = Transaction(wallet, id='HMDsP8HmP4KOsSYcKvFXXkj8hax-YD53tQC24VamgLo')
-    #
-    # tx.get_transaction()
-    #
-    # tx.get_data()
-    #
-    # logger.info(tx.data)
-    # logger.info(tx.data_root)
+    tx = Transaction(wallet, id='9Je2zcDnqowDYQUy1Vj6zVqek6rOqAlJrQWtRAowjNs') # id='HMDsP8HmP4KOsSYcKvFXXkj8hax-YD53tQC24VamgLo')
+
+    tx.get_transaction()
+
+    tx.get_data()
+
+    logger.info(tx.data)
+    logger.info(tx.data_root)
 
     # if tx.data != DATA:
     #     raise Exception("Data does not match expected result!")

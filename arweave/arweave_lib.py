@@ -326,7 +326,7 @@ class Transaction(object):
         response = requests.get(url)
 
         if response.status_code == 200:
-            self.data = base64url_decode(response.text.encode())
+            self.data = response.text
         else:
             logger.error(response.text)
 
