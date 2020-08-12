@@ -1,7 +1,7 @@
-1.0.7 (unreleased)
+1.0.7 (2020-08-12)
 ------------------
 
-- Nothing changed yet.
+- added auto decode of tags from json
 
 
 1.0.6 (2020-08-12)

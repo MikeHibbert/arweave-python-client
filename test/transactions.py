@@ -38,19 +38,19 @@ def run_test(jwk_file):
     #
     #     logger.info("{} uploaded successfully".format(tx.id))
     #
-    # tx_ids = arql(wallet, {
-    #     "op": "and",
-    #     "expr1": {
-    #         "op": "equals",
-    #         "expr1": "from",
-    #         "expr2": wallet.address
-    #     },
-    #     "expr2": {
-    #         "op": "equals",
-    #         "expr1": "Content-Type",
-    #         "expr2": "application/pdf"
-    #     }
-    # })
+    tx_ids = arql(wallet, {
+        "op": "and",
+        "expr1": {
+            "op": "equals",
+            "expr1": "from",
+            "expr2": wallet.address
+        },
+        "expr2": {
+            "op": "equals",
+            "expr1": "Content-Type",
+            "expr2": "application/pdf"
+        }
+    })
     #
     # logger.error(tx_ids)
     #
