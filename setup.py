@@ -19,7 +19,7 @@ setup(
     'arrow',
     'python-jose',
     'pynacl',
-    'pycrypto',
+    'pycryptodome',
     'cryptography',
     'requests',
     'psutil'
