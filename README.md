@@ -115,12 +115,12 @@ transaction.api_url = 'some specific node ip/address and port'
 ## Arql
 You can now perform searches using the arql method:
 ```buildoutcfg
-import arweave
+from arweave import arql
 
 wallet_file_path = "/some/folder/on/your/system"
 wallet = arweave.Wallet(wallet_file_path)
 
-transaction_ids = aweave.arql(
+transaction_ids = arql(
     wallet, 
     {
         "op": "equals",
