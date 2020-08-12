@@ -329,6 +329,7 @@ class Transaction(object):
                         "Please provide a file_handler to download this file as it is too large to download into memory"
                     )
                 else:
+                    pass
 
 
     def load_json(self, json_str):
