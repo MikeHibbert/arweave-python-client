@@ -1,5 +1,7 @@
 import os
 import logging
+import sys
+import tempfile
 from arweave.arweave_lib import Wallet, Transaction, arql, arql_with_transaction_data
 from arweave.transaction_uploader import get_uploader, from_transaction_id
 
@@ -30,13 +32,29 @@ def run_test(jwk_file):
     #
     #     uploader = get_uploader(tx, file_handler)
     #
-    #     while not uploader.is_complete:
-    #         uploader.upload_chunk()
-    #         logger.info("{}% complete, {}/{}".format(
-    #             uploader.pct_complete, uploader.uploaded_chunks, uploader.total_chunks
-    #         ))
-    #
-    #     logger.info("{} uploaded successfully".format(tx.id))
+    fd, fn = tempfile.mkstemp(suffix='.arweave')
+
+    with os.fdopen(fd, "wb") as fp:
+        fp.write(b'cheese is nice')
+
+        sys.stderr.write('arweave: wrote {} bytes to {}\n'.format(fp.tell(), fn))
+        sys.stderr.flush()
+
+    with open(fn, "rb") as fp:
+        tx = Transaction(wallet, file_handler=fp, file_path=fn)
+        tx.add_tag('GitWeave-Repository', "repo_name")
+        tx.add_tag('GitWeave-Reference', "dst")
+        tx.add_tag('GitWeave-Hash', "local_ref")
+        tx.sign()
+
+    uploader = get_uploader(tx, fp)
+    while not uploader.is_complete:
+        uploader.upload_chunk()
+        logger.info("{}% complete, {}/{}".format(
+            uploader.pct_complete, uploader.uploaded_chunks, uploader.total_chunks
+        ))
+
+    logger.info("{} uploaded successfully".format(tx.id))
     #
     # tx_ids = arql(wallet, {
     #     "op": "and",

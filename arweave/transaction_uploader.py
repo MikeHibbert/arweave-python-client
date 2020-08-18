@@ -109,6 +109,9 @@ class TransactionUploader:
         if not self.tx_posted:
             self.post_transaction()
 
+        if self.is_complete:
+            return
+
         chunk = self.transaction.get_chunk(self.chunk_index)
 
         chunk_ok = validate_path(
@@ -182,7 +185,7 @@ class TransactionUploader:
                 self.chunk_index = MAX_CHUNKS_IN_BODY
                 return
             else:
-                logger.error("{}\n\n{}".format(response.text, self.json_data))
+                logger.error("{}\n\n{}".format(response.text, self.transaction.json_data))
 
                 self.last_response_error = json.loads(response.text)
 

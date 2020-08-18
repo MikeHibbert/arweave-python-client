@@ -1,7 +1,7 @@
 1.0.11 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Fixed chunking error again
 
 
 1.0.10 (2020-08-18)

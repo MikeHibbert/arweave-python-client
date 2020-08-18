@@ -214,10 +214,10 @@ def flatten_list(inputs):
 
 def resolve_branch_proofs(node, proof=b'', depth=0):
     if node.type == "leaf":
-        return Proof(
+        return (Proof(
             node.max_byte_range - 1,
             concat_buffers([proof, node.data_hash, int_to_buffer(node.max_byte_range)])
-        )
+        ),)
 
     if node.type == "branch":
         partial_proof = concat_buffers([
