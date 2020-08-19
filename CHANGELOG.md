@@ -1,7 +1,7 @@
 1.0.13 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- tested for data < 1 chunk and data > 1 chunk scenarios
 
 
 1.0.12 (2020-08-19)
