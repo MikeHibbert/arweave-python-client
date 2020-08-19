@@ -187,7 +187,7 @@ class Transaction(object):
     def get_signature_data(self):
         self.reward = self.get_reward(self.data_size, target_address=self.target if len(self.target) > 0 else None)
 
-        if self.data_size > 0 and self.data_root == "" and not self.uses_uploader:
+        if int(self.data_size) > 0 and self.data_root == "" and not self.uses_uploader:
             if type(self.data) == str:
                 root_hash = compute_root_hash(io.StringIO(self.data))
 

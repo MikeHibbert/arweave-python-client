@@ -21,17 +21,21 @@ def run_test(jwk_file):
 
     ubuntu_iso_tx = 'Vw5mrDkj39JZSpDjM8FiJHsMnUf_EXeQh9XYo7GJstI'
 
-    file_path = "/home/mike/Downloads/ubuntu-18.04.4-desktop-amd64.iso"
-    # with open(file_path, "rb", buffering=0) as file_handler:
-    #     tx = Transaction(wallet, id=ubuntu_iso_tx,file_handler=file_handler, file_path=file_path)
-    #     tx.get_transaction()
-    #     # tx.add_tag('Content-Type', 'application/pdf')
-    #     tx.sign()
-    #
-    #     logger.error("{} chunks".format(len(tx.chunks['chunks'])))
-    #
-    #     uploader = get_uploader(tx, file_handler)
-    #
+    file_path = "testfile0.bin"
+    with open(file_path, "rb", buffering=0) as file_handler:
+        tx = Transaction(wallet, file_handler=file_handler, file_path=file_path)
+        tx.add_tag('Content-Type', 'application/bin')
+        tx.sign()
+
+        logger.error("{} chunks".format(len(tx.chunks['chunks'])))
+
+        uploader = get_uploader(tx, file_handler)
+        while not uploader.is_complete:
+            uploader.upload_chunk()
+            logger.info("{}% complete, {}/{}".format(
+                uploader.pct_complete, uploader.uploaded_chunks, uploader.total_chunks
+            ))
+
     fd, fn = tempfile.mkstemp(suffix='.arweave')
 
     with os.fdopen(fd, "wb") as fp:

@@ -165,6 +165,9 @@ def build_layers(nodes, level=0):
 def generate_proofs(root):
     proofs = resolve_branch_proofs(root)
 
+    if type(proofs) == Proof:
+        proofs = (proofs,)
+
     if type(proofs) != tuple:
         return flatten_list(proofs)
 
@@ -212,12 +215,13 @@ def flatten_list(inputs):
 
     return flat
 
+
 def resolve_branch_proofs(node, proof=b'', depth=0):
     if node.type == "leaf":
-        return (Proof(
+        return Proof(
             node.max_byte_range - 1,
             concat_buffers([proof, node.data_hash, int_to_buffer(node.max_byte_range)])
-        ),)
+        )
 
     if node.type == "branch":
         partial_proof = concat_buffers([

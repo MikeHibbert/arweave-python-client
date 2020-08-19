@@ -26,7 +26,7 @@ def decode_tag(tag):
     name = base64url_decode(tag['name'].encode())
     value = base64url_decode(tag['value'].encode())
     
-    return name, value
+    return {'name':name, 'value':value}
 
 
 def owner_to_address(owner):
