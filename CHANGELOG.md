@@ -1,7 +1,7 @@
 1.0.12 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Fixed upload_in_body error
 
 
 1.0.11 (2020-08-18)

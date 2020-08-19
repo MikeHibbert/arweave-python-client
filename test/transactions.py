@@ -47,12 +47,12 @@ def run_test(jwk_file):
         tx.add_tag('GitWeave-Hash', "local_ref")
         tx.sign()
 
-    uploader = get_uploader(tx, fp)
-    while not uploader.is_complete:
-        uploader.upload_chunk()
-        logger.info("{}% complete, {}/{}".format(
-            uploader.pct_complete, uploader.uploaded_chunks, uploader.total_chunks
-        ))
+        uploader = get_uploader(tx, fp)
+        while not uploader.is_complete:
+            uploader.upload_chunk()
+            logger.info("{}% complete, {}/{}".format(
+                uploader.pct_complete, uploader.uploaded_chunks, uploader.total_chunks
+            ))
 
     logger.info("{} uploaded successfully".format(tx.id))
     #

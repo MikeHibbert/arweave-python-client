@@ -106,13 +106,13 @@ class TransactionUploader:
 
         self.last_response_error = ''
 
+        chunk = self.transaction.get_chunk(self.chunk_index)
+
         if not self.tx_posted:
-            self.post_transaction()
+            self.post_transaction(chunk)
 
         if self.is_complete:
             return
-
-        chunk = self.transaction.get_chunk(self.chunk_index)
 
         chunk_ok = validate_path(
             self.transaction.chunks.get('data_root'),
@@ -163,14 +163,14 @@ class TransactionUploader:
 
         return base64url_encode(data)
 
-    def post_transaction(self):
+    def post_transaction(self, chunk):
         upload_in_body = self.total_chunks <= MAX_CHUNKS_IN_BODY
 
         if upload_in_body:
             url = "{}/tx".format(self.transaction.api_url)
             headers = {'Content-Type': 'application/json', 'Accept': 'text/plain'}
 
-            self.transaction.data = self.data
+            self.transaction.data = chunk['chunk']
 
             json_data = self.transaction.json_data
             response = requests.post(url, data=json_data, headers=headers)
