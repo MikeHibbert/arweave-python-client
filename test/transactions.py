@@ -8,7 +8,7 @@ from arweave.transaction_uploader import get_uploader, from_transaction_id
 logger = logging.getLogger(__name__)
 
 
-def run_test(jwk_file):
+def run_test(jwk_file, tests=[1,2,3]):
     wallet = Wallet(jwk_file)
 
     DATA = b'dGVzdA'
@@ -21,44 +21,57 @@ def run_test(jwk_file):
 
     ubuntu_iso_tx = 'Vw5mrDkj39JZSpDjM8FiJHsMnUf_EXeQh9XYo7GJstI'
 
-    file_path = "testfile0.bin"
-    with open(file_path, "rb", buffering=0) as file_handler:
-        tx = Transaction(wallet, file_handler=file_handler, file_path=file_path)
-        tx.add_tag('Content-Type', 'application/bin')
+    if 1 in tests:
+        file_path = "testfile0.bin"
+        with open(file_path, "rb", buffering=0) as file_handler:
+            tx = Transaction(wallet, file_handler=file_handler, file_path=file_path)
+            tx.add_tag('Content-Type', 'application/bin')
+            tx.sign()
+
+            logger.error("{} chunks".format(len(tx.chunks['chunks'])))
+
+            uploader = get_uploader(tx, file_handler)
+            while not uploader.is_complete:
+                uploader.upload_chunk()
+                logger.info("{}% complete, {}/{}".format(
+                    uploader.pct_complete, uploader.uploaded_chunks, uploader.total_chunks
+                ))
+
+            logger.info("{} uploaded successfully".format(tx.id))
+
+    if 2 in tests:
+        fd, fn = tempfile.mkstemp(suffix='.arweave')
+
+        with os.fdopen(fd, "wb") as fp:
+            fp.write(b'cheese is nice')
+
+            sys.stderr.write('arweave: wrote {} bytes to {}\n'.format(fp.tell(), fn))
+            sys.stderr.flush()
+
+        with open(fn, "rb") as fp:
+            tx = Transaction(wallet, file_handler=fp, file_path=fn)
+            tx.add_tag('GitWeave-Repository', "repo_name")
+            tx.add_tag('GitWeave-Reference', "dst")
+            tx.add_tag('GitWeave-Hash', "local_ref")
+            tx.sign()
+
+            uploader = get_uploader(tx, fp)
+            while not uploader.is_complete:
+                uploader.upload_chunk()
+                logger.info("{}% complete, {}/{}".format(
+                    uploader.pct_complete, uploader.uploaded_chunks, uploader.total_chunks
+                ))
+
+            logger.info("{} uploaded successfully".format(tx.id))
+
+    if 3 in tests:
+        tx = Transaction(wallet, data=b'cheese is nice')
+        tx.add_tag('Test tx', "python-lib")
         tx.sign()
 
-        logger.error("{} chunks".format(len(tx.chunks['chunks'])))
+        tx.send()
 
-        uploader = get_uploader(tx, file_handler)
-        while not uploader.is_complete:
-            uploader.upload_chunk()
-            logger.info("{}% complete, {}/{}".format(
-                uploader.pct_complete, uploader.uploaded_chunks, uploader.total_chunks
-            ))
-
-    fd, fn = tempfile.mkstemp(suffix='.arweave')
-
-    with os.fdopen(fd, "wb") as fp:
-        fp.write(b'cheese is nice')
-
-        sys.stderr.write('arweave: wrote {} bytes to {}\n'.format(fp.tell(), fn))
-        sys.stderr.flush()
-
-    with open(fn, "rb") as fp:
-        tx = Transaction(wallet, file_handler=fp, file_path=fn)
-        tx.add_tag('GitWeave-Repository', "repo_name")
-        tx.add_tag('GitWeave-Reference', "dst")
-        tx.add_tag('GitWeave-Hash', "local_ref")
-        tx.sign()
-
-        uploader = get_uploader(tx, fp)
-        while not uploader.is_complete:
-            uploader.upload_chunk()
-            logger.info("{}% complete, {}/{}".format(
-                uploader.pct_complete, uploader.uploaded_chunks, uploader.total_chunks
-            ))
-
-    logger.info("{} uploaded successfully".format(tx.id))
+        logger.info("{} uploaded successfully".format(tx.id))
     #
     # tx_ids = arql(wallet, {
     #     "op": "and",
@@ -104,14 +117,15 @@ def run_test(jwk_file):
     # if tx.data_root != DATA_ROOT:
     #     raise Exception("Data root does not match expected result!")
 
-    tx = Transaction(wallet, id='9Je2zcDnqowDYQUy1Vj6zVqek6rOqAlJrQWtRAowjNs') # id='HMDsP8HmP4KOsSYcKvFXXkj8hax-YD53tQC24VamgLo')
+    if 4 in tests:
+        tx = Transaction(wallet, id='9Je2zcDnqowDYQUy1Vj6zVqek6rOqAlJrQWtRAowjNs') # id='HMDsP8HmP4KOsSYcKvFXXkj8hax-YD53tQC24VamgLo')
 
-    tx.get_transaction()
+        tx.get_transaction()
 
-    tx.get_data()
+        tx.get_data()
 
-    logger.info(tx.data)
-    logger.info(tx.data_root)
+        logger.info(tx.data)
+        logger.info(tx.data_root)
 
     # if tx.data != DATA:
     #     raise Exception("Data does not match expected result!")
@@ -165,4 +179,4 @@ if __name__ == "__main__":
     else:
         raise FileNotFoundError("Unable to load a wallet JSON file from wallet/ ")
 
-    run_test(join(wallet_path, filename))
+    run_test(join(wallet_path, filename), [1,2,3,4])
