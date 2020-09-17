@@ -323,7 +323,7 @@ class Transaction(object):
         response = requests.get(url)
 
         if response.status_code == 200:
-            return winston_to_ar(int(response.text))
+            return winston_to_ar(response.text)
         else:
             logger.error(response.text)
 
