@@ -35,7 +35,7 @@ def owner_to_address(owner):
     return result
 
 
-def winston_to_ar(winston_str):
+def winston_to_ar(winston_str: str) -> float:
     length = len(winston_str)
     
     if length > 12:
@@ -43,14 +43,13 @@ def winston_to_ar(winston_str):
         winston_str = "{}.{}".format(winston_str[0:past_twelve], winston_str[-12:])
     else:
         lessthan_twelve = 12 - length
-        winston_str = "0.{}{}".format(winston_str,"0" * lessthan_twelve)
+        winston_str = "0.{}{}".format("0" * lessthan_twelve, winston_str)
         
     return float(winston_str)
 
 
-def ar_to_winston(ar_amount):
-    ar_str = "{:.12f}".format(ar_amount)
-    return ar_str.replace('.','').lstrip("0")
+def ar_to_winston(ar_amount: str) -> int:
+    return int(float(ar_amount) * 10**12)
 
 
 def concat_buffers(buffers):
