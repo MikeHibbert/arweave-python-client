@@ -318,7 +318,7 @@ class Transaction(object):
         return tx
 
     def get_price(self):
-        u = "{}/price/{}".format(self.api_url, self.data_size)
+        url = "{}/price/{}".format(self.api_url, self.data_size)
 
         response = requests.get(url)
 
