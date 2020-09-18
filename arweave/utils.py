@@ -48,8 +48,8 @@ def winston_to_ar(winston_str: str) -> float:
     return float(winston_str)
 
 
-def ar_to_winston(ar_amount: str) -> int:
-    return int(float(ar_amount) * 10**12)
+def ar_to_winston(ar_amount: str) -> str:
+    return str(int(float(ar_amount) * 10**12))
 
 
 def concat_buffers(buffers):
