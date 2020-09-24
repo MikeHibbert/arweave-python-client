@@ -47,17 +47,17 @@ class Wallet(object):
             self.address = owner_to_address(self.owner)
 
         self.api_url = API_URL
-        self.balance = 0
         
-    def get_balance(self):
+    @property
+    def balance(self):
         url = "{}/wallet/{}/balance".format(self.api_url, self.address)
 
         response = requests.get(url)
 
         if response.status_code == 200:
-            self.balance = winston_to_ar(response.text)
+            balance = winston_to_ar(response.text)
 
-        return self.balance  
+        return balance  
     
     def sign(self, message):
         h = SHA256.new(message)
