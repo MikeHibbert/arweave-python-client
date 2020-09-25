@@ -12,8 +12,8 @@ def create_tag(name, value, v2):
     else:
         b64name = base64url_encode(name.encode('ascii')).decode()
         b64value = base64url_encode(value.encode('ascii')).decode()
-    
-    return {"name": b64name, "value":b64value}
+
+    return {"name": b64name, "value": b64value}
 
 
 def encode_tag(tag):
@@ -22,11 +22,12 @@ def encode_tag(tag):
 
     return {"name": b64name, "value": b64value}
 
+
 def decode_tag(tag):
     name = base64url_decode(tag['name'].encode())
     value = base64url_decode(tag['value'].encode())
-    
-    return {'name':name, 'value':value}
+
+    return {'name': name, 'value': value}
 
 
 def owner_to_address(owner):
@@ -37,20 +38,20 @@ def owner_to_address(owner):
 
 def winston_to_ar(winston_str):
     length = len(winston_str)
-    
+
     if length > 12:
         past_twelve = length - 12
         winston_str = "{}.{}".format(winston_str[0:past_twelve], winston_str[-12:])
     else:
         lessthan_twelve = 12 - length
-        winston_str = "0.{}{}".format(winston_str,"0" * lessthan_twelve)
-        
+        winston_str = "0.{}{}".format(winston_str, "0" * lessthan_twelve)
+
     return float(winston_str)
 
 
 def ar_to_winston(ar_amount):
     ar_str = "{:.12f}".format(ar_amount)
-    return ar_str.replace('.','').lstrip("0")
+    return ar_str.replace('.', '').lstrip("0")
 
 
 def concat_buffers(buffers):
@@ -70,4 +71,3 @@ def concat_buffers(buffers):
         offset += len(buffer)
 
     return bytes(temp)
-

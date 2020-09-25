@@ -11,13 +11,15 @@ from .merkle import validate_path, CHUNK_SIZE
 from .arweave_lib import API_URL
 
 from signal import signal, SIGPIPE, SIG_DFL
+
 signal(SIGPIPE, SIG_DFL)
 
 logger = logging.getLogger(__name__)
 
 MAX_CHUNKS_IN_BODY = 1
 
-FATAL_CHUNK_UPLOAD_ERRORS = ['invalid_json', 'chunk_too_big', 'data_path_too_big', 'offset_too_big', 'data_size_too_big', 'chunk_proof_ratio_not_attractive', 'invalid_proof']
+FATAL_CHUNK_UPLOAD_ERRORS = ['invalid_json', 'chunk_too_big', 'data_path_too_big', 'offset_too_big',
+                             'data_size_too_big', 'chunk_proof_ratio_not_attractive', 'invalid_proof']
 
 ERROR_DELAY = 1000 * 40
 
@@ -232,6 +234,7 @@ def get_transaction_offset(tx_id):
             "Unable to get transaction offset: {}".format(response_json.get("error"))
         )
 
+
 def get_chunk(offset):
     url = "{}/chunk/{}".format(API_URL, offset)
 
@@ -276,9 +279,6 @@ def download_chunked_data(tx_id, file_handler=None):
         else:
             file_handler.seek(byte_offset)
             file_handler.write(chunk_data)
-
-        
-
 
 
 def from_serialized(self, file_handler, json_str):
