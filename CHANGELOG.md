@@ -1,7 +1,7 @@
-1.0.14 (unreleased)
+1.0.14 (2020-09-25)
 -------------------
 
-- Nothing changed yet.
+- Fix for ar -> winston conversion and changed get_balance to self.balance property
 
 
 1.0.13 (2020-08-19)
