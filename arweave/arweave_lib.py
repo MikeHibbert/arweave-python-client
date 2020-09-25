@@ -14,8 +14,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
 from Crypto.Hash import SHA256
 from .utils import (
-    winston_to_ar, 
-    ar_to_winston, 
+    winston_to_ar,
+    ar_to_winston,
     owner_to_address,
     create_tag,
     encode_tag,
@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 TRANSACTION_DATA_LIMIT_IN_BYTES = 2000000
 API_URL = "https://arweave.net"
+
 
 class ArweaveTransactionException(Exception):
     pass
@@ -42,12 +43,12 @@ class Wallet(object):
             self.jwk_data['p2s'] = ''
             self.jwk = jwk.construct(self.jwk_data, algorithm=jwk.ALGORITHMS.RS256)
             self.rsa = RSA.importKey(self.jwk.to_pem())
-            
+
             self.owner = self.jwk_data.get('n')
             self.address = owner_to_address(self.owner)
 
         self.api_url = API_URL
-        
+       
     @property
     def balance(self):
         url = "{}/wallet/{}/balance".format(self.api_url, self.address)
@@ -61,12 +62,12 @@ class Wallet(object):
     
     def sign(self, message):
         h = SHA256.new(message)
-        signed_data = PKCS1_PSS.new(self.rsa).sign(h)      
+        signed_data = PKCS1_PSS.new(self.rsa).sign(h)
         return signed_data
-    
+
     def verify(self):
-        pass 
-    
+        pass
+
     def get_last_transaction_id(self):
         url = "{}/tx_anchor".format(self.api_url)
 
@@ -76,7 +77,7 @@ class Wallet(object):
             self.last_tx = response.text
         else:
             raise ArweaveTransactionException(response.text)
-            
+
         return self.last_tx
 
 
@@ -85,7 +86,7 @@ class Transaction(object):
         self.jwk_data = wallet.jwk_data
         self.jwk = jwk.construct(self.jwk_data, algorithm="RS256")
         self.wallet = wallet
-        
+
         self.id = kwargs.get('id', '')
         self.last_tx = wallet.get_last_transaction_id()
         self.owner = self.jwk_data.get('n')
@@ -94,7 +95,7 @@ class Transaction(object):
 
         self.api_url = API_URL
         self.chunks = None
-        
+
         data = kwargs.get('data', '')
         self.data_size = len(data)
 
@@ -129,7 +130,8 @@ class Transaction(object):
             self.quantity = kwargs.get('quantity', '0')
             if float(self.quantity) > 0:
                 if self.target == '':
-                    raise ArweaveTransactionException("Unable to send {} AR without specifying a target address".format(self.quantity))
+                    raise ArweaveTransactionException(
+                        "Unable to send {} AR without specifying a target address".format(self.quantity))
 
                 # convert to winston
                 self.quantity = ar_to_winston(float(self.quantity))
@@ -145,12 +147,13 @@ class Transaction(object):
         if type(transaction_json) == str:
             self.load_json(transaction_json)
         else:
-            raise ArweaveTransactionException("Please supply a string containing json to initialize a serialized transaction")
-        
+            raise ArweaveTransactionException(
+                "Please supply a string containing json to initialize a serialized transaction")
+
     def get_reward(self, data_size, target_address=None):
 
-        url = "{}/price/{}".format(self.api_url,data_size)
-        
+        url = "{}/price/{}".format(self.api_url, data_size)
+
         if target_address:
             url = "{}/price/{}/{}".format(self.api_url, data_size, target_address)
 
@@ -158,9 +161,9 @@ class Transaction(object):
 
         if response.status_code == 200:
             reward = response.text
-            
-        return reward       
-    
+
+        return reward
+
     def add_tag(self, name, value):
         tag = create_tag(name, value, self.format == 2)
         self.tags.append(tag)
@@ -171,19 +174,19 @@ class Transaction(object):
             tags.append(encode_tag(tag))
 
         self.tags = tags
-        
+
     def sign(self):
         data_to_sign = self.get_signature_data()
-        
+
         raw_signature = self.wallet.sign(data_to_sign)
-        
+
         self.signature = base64url_encode(raw_signature)
-        
+
         self.id = base64url_encode(hashlib.sha256(raw_signature).digest())
 
         if type(self.id) == bytes:
             self.id = self.id.decode()
-        
+
     def get_signature_data(self):
         self.reward = self.get_reward(self.data_size, target_address=self.target if len(self.target) > 0 else None)
 
@@ -232,7 +235,7 @@ class Transaction(object):
             signature_data = deep_hash(signature_data_list)
 
         return signature_data
-    
+
     def send(self):
         url = "{}/tx".format(self.api_url)
 
@@ -247,7 +250,7 @@ class Transaction(object):
             logger.debug("RESPONSE 200: {}".format(response.text))
         else:
             logger.error("{}\n\n{}".format(response.text, self.json_data))
-            
+
         return self.last_tx
 
     def to_dict(self):
@@ -287,9 +290,9 @@ class Transaction(object):
         json_str = json.dumps(data)
 
         logger.error(json_str)
-        
+
         return json_str.replace(' ', '')
-    
+
     def get_status(self):
         url = "{}/tx/{}/status".format(self.api_url, self.id)
 
@@ -298,23 +301,23 @@ class Transaction(object):
         if response.status_code == 200:
             self.status = json.loads(response.text)
         else:
-            logger.error(response.text)  
+            logger.error(response.text)
             self.status = "PENDING"
-            
+
         return self.status
-    
+
     def get_transaction(self):
         url = "{}/tx/{}".format(self.api_url, self.id)
 
         response = requests.get(url)
-        
+
         tx = None
 
         if response.status_code == 200:
             self.load_json(response.text)
         else:
-            logger.error(response.text)    
-            
+            logger.error(response.text)
+
         return tx
 
     def get_price(self):
@@ -343,7 +346,7 @@ class Transaction(object):
 
     def load_json(self, json_str):
         json_data = json.loads(json_str)
-        
+
         self.data = json_data.get('data', '')
         self.last_tx = json_data.get('last_tx', '')
         self.owner = json_data.get('owner', '')
@@ -355,7 +358,7 @@ class Transaction(object):
         self.data_size = json_data.get('data_size', '0')
         self.data_root = json_data.get('data_root', '')
         self.data_tree = json_data.get('data_tree', [])
-        
+
         logger.debug(json_data)
 
     def prepare_chunks(self):
@@ -471,7 +474,3 @@ def arql_with_transaction_data(wallet, query):
             transactions.append(tx)
 
     return None
-
-
-
-

@@ -27,7 +27,8 @@ class Node:
 
 class BranchNode(Node):
     def __init__(self, *args, **kwargs):
-        super(BranchNode, self).__init__(id=kwargs['id'], max_byte_range=kwargs['max_byte_range'], byte_range=kwargs['byte_range'])
+        super(BranchNode, self).__init__(id=kwargs['id'], max_byte_range=kwargs['max_byte_range'],
+                                         byte_range=kwargs['byte_range'])
         self.type = "branch"
         self.left_child = kwargs.get("left_child", None)
         self.right_child = kwargs.get("right_child", None)
@@ -47,6 +48,7 @@ class TaggedChunk:
         self.id = tc_id
         self.end = end
 
+
 class Chunk:
     def __init__(self, data_hash, data_size=0, min_byte_range=0, max_byte_range=0):
         self.data_size = data_size
@@ -62,10 +64,12 @@ class Chunk:
             "minByteRange": self.min_byte_range
         }
 
+
 class HashNode:
     def __init__(self, hn_id, max):
         self.id = hn_id
         self.max = max
+
 
 class Proof:
     def __init__(self, offset, proof):
@@ -95,7 +99,8 @@ def chunk_data(file_handler):
     :param file_handler:
     :return: chunks
     """
-    chunks = []; chadd = chunks.append
+    chunks = [];
+    chadd = chunks.append
 
     cursor = 0
 
@@ -151,11 +156,12 @@ def build_layers(nodes, level=0):
 
         return root
 
-    next_layer = []; nadd = next_layer.append
+    next_layer = [];
+    nadd = next_layer.append
 
     for i in range(0, nodes_lenth, 2):
         left = nodes[i]
-        right = None if i+1 > (nodes_lenth-1) else nodes[i+1]
+        right = None if i + 1 > (nodes_lenth - 1) else nodes[i + 1]
 
         nadd(hash_branch(left, right))
 
@@ -193,7 +199,8 @@ def generate_transaction_chunks(file_handler):
 
 
 def flatten_tuple(inputs):
-    flat = []; fadd = flat.append
+    flat = [];
+    fadd = flat.append
 
     for item in inputs:
         if type(item) == tuple:
@@ -205,7 +212,9 @@ def flatten_tuple(inputs):
 
 
 def flatten_list(inputs):
-    flat = []; fadd = flat.append; fexd = flat.extend
+    flat = [];
+    fadd = flat.append;
+    fexd = flat.extend
 
     for item in inputs:
         if type(item) == list:
@@ -282,7 +291,7 @@ def note_to_buffer(note):
     buffer = b"\x00" * NOTE_SIZE
     buffer = bytearray(buffer)
 
-    for i in range(NOTE_SIZE-1, 0, -1):
+    for i in range(NOTE_SIZE - 1, 0, -1):
         if i > 0:
             if note > 0:
                 buffer[i] = note.to_bytes(4, byteorder='big')[-1]
@@ -344,7 +353,7 @@ def validate_path(id, dest, left_bound, right_bound, path):
         result = id == path_data_hash
 
         if result:
-            return ValidatedPathResult(right_bound-1, left_bound, right_bound, right_bound - left_bound)
+            return ValidatedPathResult(right_bound - 1, left_bound, right_bound, right_bound - left_bound)
 
         return False
 
@@ -384,6 +393,7 @@ def validate_path(id, dest, left_bound, right_bound, path):
 
     return False
 
+
 def debug(proof, output=""):
     if len(proof) < 1:
         return output
@@ -391,8 +401,8 @@ def debug(proof, output=""):
     left = proof[:HASH_SIZE]
     right = proof[len(left):len(left) + HASH_SIZE]
     offset_buffer = proof[
-        len(left) + len(right) : len(left) + len(right) + HASH_SIZE
-    ]
+                    len(left) + len(right): len(left) + len(right) + HASH_SIZE
+                    ]
 
     offset = buffer_to_int(offset_buffer)
 
