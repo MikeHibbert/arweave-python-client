@@ -48,7 +48,7 @@ class Wallet(object):
             self.address = owner_to_address(self.owner)
 
         self.api_url = API_URL
-       
+
     @property
     def balance(self):
         url = "{}/wallet/{}/balance".format(self.api_url, self.address)
@@ -57,9 +57,11 @@ class Wallet(object):
 
         if response.status_code == 200:
             balance = winston_to_ar(response.text)
+        else:
+            raise ArweaveTransactionException(response.text)
 
-        return balance  
-    
+        return balance
+
     def sign(self, message):
         h = SHA256.new(message)
         signed_data = PKCS1_PSS.new(self.rsa).sign(h)
