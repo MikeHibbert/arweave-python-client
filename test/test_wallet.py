@@ -6,13 +6,11 @@ import pytest
 
 wallet = Wallet("test_jwk_file.json")
 
-api_url = arweave.arweave_lib.API_URL
-
 
 @responses.activate
 def test_get_balance():
     mock_balance = "12345678"
-    mock_url = '{}/wallet/{}/balance'.format(api_url, wallet.address)
+    mock_url = '{}/wallet/{}/balance'.format(wallet.api_url, wallet.address)
     # register successful response
     responses.add(responses.GET, mock_url, body=mock_balance, status=200)
     # register unsuccessful response
@@ -29,7 +27,7 @@ def test_get_balance():
 def test_get_last_transaction_id():
     # register successful response
     mock_tx_id = "12345678"
-    mock_url = '{}/tx_anchor'.format(api_url)
+    mock_url = '{}/tx_anchor'.format(wallet.api_url)
     responses.add(responses.GET, mock_url, body=mock_tx_id, status=200)
     last_tx_id = wallet.get_last_transaction_id()
 
