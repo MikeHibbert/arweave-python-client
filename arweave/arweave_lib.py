@@ -104,7 +104,7 @@ class Transaction(object):
         if type(data) is bytes:
             self.data = base64url_encode(data)
         else:
-            self.data = base64url_encode(data.encode('ascii'))
+            self.data = base64url_encode(data.encode('utf-8'))
 
         if self.data is None:
             self.data = ''
