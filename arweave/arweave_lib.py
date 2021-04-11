@@ -246,7 +246,7 @@ class Transaction(object):
         json_data = self.json_data
         response = requests.post(url, data=json_data, headers=headers)
 
-        logger.error("{}\n\n{}".format(response.text, self.json_data))
+        logger.debug("{}\n\n{}".format(response.text, self.json_data))
 
         if response.status_code == 200:
             logger.debug("RESPONSE 200: {}".format(response.text))
@@ -291,7 +291,7 @@ class Transaction(object):
 
         json_str = json.dumps(data)
 
-        logger.error(json_str)
+        logger.debug(json_str)
 
         return json_str.replace(' ', '')
 
