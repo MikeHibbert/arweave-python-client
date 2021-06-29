@@ -38,7 +38,7 @@ transaction.send()
 #####ATTENTION! quantity is in AR and is automatically converted to Winston before sending
 
 ## Uploading large files
-Uploading large data files is now possible! you can now upload data larger than your physical memory in the following way
+Uploading large data files is now possible! you can now upload data larger than your physical memory or maximum transaction size (12MB) in the following way
 ```buildoutcfg
 from arweave.arweave_lib import Wallet, Transaction
 from arweave.transaction_uploader import get_uploader
