@@ -10,9 +10,11 @@ from .utils import *
 from .merkle import validate_path, CHUNK_SIZE
 from .arweave_lib import API_URL
 
-from signal import signal, SIGPIPE, SIG_DFL
-
-signal(SIGPIPE, SIG_DFL)
+try:
+    from signal import signal, SIGPIPE, SIG_DFL
+    signal(SIGPIPE, SIG_DFL)
+except ImportError:  # If SIGPIPE is not available (win32),
+    pass
 
 logger = logging.getLogger(__name__)
 
