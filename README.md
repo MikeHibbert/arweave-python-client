@@ -16,9 +16,20 @@ import arweave
 wallet_file_path = "/some/folder/on/your/system"
 wallet = arweave.Wallet(wallet_file_path)
 
-balance =  wallet.balance 
+balance =  wallet.balance
 
 last_transaction = wallet.get_last_transaction_id()
+```
+
+## Loading your wallet
+If your wallet data is stored in a secret manager or anywhere other than a file, you can load it with the `from_data` classmethod:
+```buildoutcfg
+import arweave
+
+wallet_data = // Load from cloud storage or wherever
+wallet = arweave.Wallet.from_data(wallet_data)
+
+balance =  wallet.balance
 ```
 
 ## Transactions
@@ -49,7 +60,7 @@ with open("my_mahoosive_file.dat", "rb", buffering=0) as file_handler:
     tx = Transaction(wallet, file_handler=file_handler, file_path="/some/path/my_mahoosive_file.dat")
     tx.add_tag('Content-Type', 'application/dat')
     tx.sign()
-    
+
     uploader = get_uploader(tx, file_handler)
 
     while not uploader.is_complete:
@@ -79,7 +90,7 @@ wallet = Wallet(jwk_file)
 
 with open('myfile.pdf', 'r') as mypdf:
     pdf_string_data = mypdf.read()
-    
+
     transaction = Transaction(wallet, data=pdf_string_data)
     transaction.sign()
     transaction.send()
@@ -95,7 +106,7 @@ tx.get_transaction()
 In addition you may want to get the data attached to this transaction once you've decided you need it:
 ```
 tx.get_data()
-print(tx.data) 
+print(tx.data)
 > "some data"
 ```
 
@@ -121,7 +132,7 @@ wallet_file_path = "/some/folder/on/your/system"
 wallet = arweave.Wallet(wallet_file_path)
 
 transaction_ids = arql(
-    wallet, 
+    wallet,
     {
         "op": "equals",
         "expr1": "from",
@@ -137,7 +148,7 @@ wallet_file_path = "/some/folder/on/your/system"
 wallet = arweave.Wallet(wallet_file_path)
 
 transactions = aweave.arql_with_transaction_data(
-    wallet, 
+    wallet,
     {
         "op": "equals",
         "expr1": "from",
