@@ -1,5 +1,6 @@
 from arweave import Wallet
 import arweave
+import json
 import responses
 from arweave.utils import winston_to_ar
 import pytest
@@ -35,6 +36,13 @@ def test_get_last_transaction_id():
     assert wallet.last_tx == mock_tx_id
 
 
+def test_create_from_data():
+    with open("test_jwk_file.json", 'r') as f:
+        from_data_wallet = Wallet.from_data(json.load(f))
+    assert from_data_wallet.owner == wallet.owner
+
+
 if __name__ == "__main__":
     test_get_balance()
     test_get_last_transaction_id()
+    test_create_from_data()
