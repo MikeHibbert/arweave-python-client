@@ -37,17 +37,27 @@ class ArweaveTransactionException(Exception):
 class Wallet(object):
     HASH = 'sha256'
 
+    def _set_jwk_params(self):
+        self.jwk_data['p2s'] = ''
+        self.jwk = jwk.construct(self.jwk_data, algorithm=jwk.ALGORITHMS.RS256)
+        self.rsa = RSA.importKey(self.jwk.to_pem())
+
+        self.owner = self.jwk_data.get('n')
+        self.address = owner_to_address(self.owner)
+
+        self.api_url = API_URL
+
     def __init__(self, jwk_file='jwk_file.json'):
         with open(jwk_file, 'r') as j_file:
             self.jwk_data = json.loads(j_file.read())
-            self.jwk_data['p2s'] = ''
-            self.jwk = jwk.construct(self.jwk_data, algorithm=jwk.ALGORITHMS.RS256)
-            self.rsa = RSA.importKey(self.jwk.to_pem())
+        self._set_jwk_params()
 
-            self.owner = self.jwk_data.get('n')
-            self.address = owner_to_address(self.owner)
-
-        self.api_url = API_URL
+    @classmethod
+    def from_data(cls, jwk_data):
+        wallet = cls.__new__(cls)
+        wallet.jwk_data = jwk_data
+        wallet._set_jwk_params()
+        return wallet
 
     @property
     def balance(self):
