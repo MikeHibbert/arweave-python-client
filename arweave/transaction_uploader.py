@@ -295,6 +295,7 @@ def from_serialized(self, file_handler, json_str):
     upload = TransactionUploader(
         file_handler=file_handler,
         transaction=Transaction(
+            file_handler=file_handler,
             transaction=serialized.transaction
         )
     )
@@ -329,6 +330,7 @@ def from_transaction_id(file_handler, transaction_str, wallet, api_url=API_URL):
         file_handler=file_handler,
         transaction=Transaction(
             wallet,
+            file_handler=file_handler,
             transaction=response.text
         )
     )
