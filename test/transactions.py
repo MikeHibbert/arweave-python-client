@@ -14,7 +14,7 @@ def run_test(jwk_file, tests=[1,2,3]):
     DATA = b'dGVzdA'
     DATA_ROOT = b'uwdqwpnoHTe237EIEIOizSYku8wkiVZJY-E6cv33wt4'
 
-    balance = wallet.get_balance()
+    balance = wallet.balance
 
     logger.debug(balance)
     data = "test"
@@ -27,6 +27,7 @@ def run_test(jwk_file, tests=[1,2,3]):
             tx = Transaction(wallet, file_handler=file_handler, file_path=file_path)
             tx.add_tag('Content-Type', 'application/bin')
             tx.sign()
+            assert tx.data_root == b'YPg3Q4bkY2--cf4Ydjf5XnT1LXDKAVXVCDUaqkJ0Jvk'
 
             logger.error("{} chunks".format(len(tx.chunks['chunks'])))
 
@@ -54,6 +55,7 @@ def run_test(jwk_file, tests=[1,2,3]):
             tx.add_tag('GitWeave-Reference', "dst")
             tx.add_tag('GitWeave-Hash', "local_ref")
             tx.sign()
+            assert tx.data_root == b'EoRrCYqOHt8Gp4tA8MGQZP-EsBGEYkq4JVUW5MMwlfU'
 
             uploader = get_uploader(tx, fp)
             while not uploader.is_complete:
@@ -68,6 +70,7 @@ def run_test(jwk_file, tests=[1,2,3]):
         tx = Transaction(wallet, data=b'cheese is nice')
         tx.add_tag('Test tx', "python-lib")
         tx.sign()
+        assert tx.data_root == b'EoRrCYqOHt8Gp4tA8MGQZP-EsBGEYkq4JVUW5MMwlfU'
 
         tx.send()
 
@@ -168,9 +171,7 @@ if __name__ == "__main__":
 
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
-
-    wallet_path = '/home/mike/Documents/python/arkive/arkive/wallet'  # os.path.join(BASE_DIR, 'arkive', 'wallet')
+    wallet_path = os.path.join(BASE_DIR, 'arkive', 'wallet')
 
     files = [f for f in listdir(wallet_path) if isfile(join(wallet_path, f))]
 
