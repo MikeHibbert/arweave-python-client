@@ -19,7 +19,8 @@ from .utils import (
     owner_to_address,
     create_tag,
     encode_tag,
-    decode_tag
+    decode_tag,
+    base64url_decode
 )
 from .deep_hash import deep_hash
 from .merkle import compute_root_hash, generate_transaction_chunks
@@ -204,10 +205,10 @@ class Transaction(object):
 
         if int(self.data_size) > 0 and self.data_root == "" and not self.uses_uploader:
             if type(self.data) == str:
-                root_hash = compute_root_hash(io.StringIO(self.data))
+                root_hash = compute_root_hash(io.BytesIO(base64url_decode(self.data.encode('utf-8'))))
 
             if type(self.data) == bytes:
-                root_hash = compute_root_hash(io.BytesIO(self.data))
+                root_hash = compute_root_hash(io.BytesIO(base64url_decode(self.data)))
 
             self.data_root = base64url_encode(root_hash)
 
