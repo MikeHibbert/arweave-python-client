@@ -34,6 +34,64 @@ API_URL = "https://arweave.net"
 class ArweaveTransactionException(Exception):
     pass
 
+class Peer(object):
+    def __init__(self, api_url = API_URL):
+        self.api_url = api_url
+
+    def _get(self, format, *params):
+        url = format.format(self.api_url, *params)
+
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            return response
+        else:
+            logger.error(response.text)
+            raise ArweaveTransactionException(response.text)
+
+    def wallet_balance(self, address):
+        response = self._get("{}/wallet/{}/balance", address)
+        return winston_to_ar(response.text)
+
+    def tx_anchor(self):
+        last_tx_response = self._get("{}/tx_anchor")
+        return last_tx_response.text
+
+    def price(self, data_size, target_address=None):
+        if target_address:
+            response = self._get("{}/price/{}/{}", data_size, target_address)
+        else:
+            response = self._get("{}/price/{}", data_size)
+        return winston_to_ar(response.text)
+
+    def send(self, json_data):
+        url = "{}/tx".format(self.api_url)
+
+        headers = {'Content-Type': 'application/json', 'Accept': 'text/plain'}
+
+        response = requests.post(url, data=json_data, headers=headers)
+
+        logger.debug("{}\n\n{}".format(response.text, self.json_data))
+
+        if response.status_code == 200:
+            logger.debug("RESPONSE 200: {}".format(response.text))
+            return response.text
+        else:
+            logger.error("{}\n\n{}".format(response.text, json_data))
+            raise ArweaveTransactionException(response.text, json_data)
+
+    def tx_status(self, txid):
+        response = self._get("{}/tx/{}/status", txid)
+        return json.loads(response.text)
+
+    def tx(self, txid):
+        tx_response = self._get("{}/tx/{}", txid)
+        return tx_response.text
+
+    def data(self, txid):
+        response = self._get("{}/{}/", txid)
+        return response.content
+
 
 class Wallet(object):
     HASH = 'sha256'
@@ -46,7 +104,13 @@ class Wallet(object):
         self.owner = self.jwk_data.get('n')
         self.address = owner_to_address(self.owner)
 
-        self.api_url = API_URL
+        self.peer = Peer(API_URL)
+    @property
+    def api_url(self):
+        return self.peer.api_url
+    @api_url.setter
+    def set_api_url(self, api_url):
+        self.peer.api_url = api_url
 
     def __init__(self, jwk_file='jwk_file.json'):
         with open(jwk_file, 'r') as j_file:
@@ -62,16 +126,7 @@ class Wallet(object):
 
     @property
     def balance(self):
-        url = "{}/wallet/{}/balance".format(self.api_url, self.address)
-
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            balance = winston_to_ar(response.text)
-        else:
-            raise ArweaveTransactionException(response.text)
-
-        return balance
+        return self.peer.wallet_balance(self.address)
 
     def sign(self, message):
         h = SHA256.new(message)
@@ -82,17 +137,8 @@ class Wallet(object):
         pass
 
     def get_last_transaction_id(self):
-        url = "{}/tx_anchor".format(self.api_url)
-
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            self.last_tx = response.text
-        else:
-            raise ArweaveTransactionException(response.text)
-
+        self.last_tx = self.peer.tx_anchor()
         return self.last_tx
-
 
 class Transaction(object):
     def __init__(self, wallet, **kwargs):
@@ -106,7 +152,7 @@ class Transaction(object):
         self.tags = []
         self.format = kwargs.get('format', 2)
 
-        self.api_url = API_URL
+        self.peer = Peer(API_URL)
         self.chunks = None
 
         data = kwargs.get('data', '')
@@ -155,6 +201,12 @@ class Transaction(object):
 
             self.signature = ''
             self.status = None
+    @property
+    def api_url(self):
+        return self.peer.api_url
+    @api_url.setter
+    def set_api_url(self, api_url):
+        self.peer.api_url = api_url
 
     def from_serialized_transaction(self, transaction_json):
         if type(transaction_json) == str:
@@ -164,18 +216,7 @@ class Transaction(object):
                 "Please supply a string containing json to initialize a serialized transaction")
 
     def get_reward(self, data_size, target_address=None):
-
-        url = "{}/price/{}".format(self.api_url, data_size)
-
-        if target_address:
-            url = "{}/price/{}/{}".format(self.api_url, data_size, target_address)
-
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            reward = response.text
-
-        return reward
+        return self.peer.price(data_size, target_address)
 
     def add_tag(self, name, value):
         tag = create_tag(name, value, self.format == 2)
@@ -250,19 +291,10 @@ class Transaction(object):
         return signature_data
 
     def send(self):
-        url = "{}/tx".format(self.api_url)
-
-        headers = {'Content-Type': 'application/json', 'Accept': 'text/plain'}
-
-        json_data = self.json_data
-        response = requests.post(url, data=json_data, headers=headers)
-
-        logger.debug("{}\n\n{}".format(response.text, self.json_data))
-
-        if response.status_code == 200:
-            logger.debug("RESPONSE 200: {}".format(response.text))
-        else:
-            logger.error("{}\n\n{}".format(response.text, self.json_data))
+        try:
+            self.peer.send(self.json_data)
+        except ArweaveTransactionException:
+            pass
 
         return self.last_tx
 
@@ -307,55 +339,27 @@ class Transaction(object):
         return json_str.replace(' ', '')
 
     def get_status(self):
-        url = "{}/tx/{}/status".format(self.api_url, self.id)
-
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            self.status = json.loads(response.text)
-        else:
-            logger.error(response.text)
+        try:
+            self.status = self.peer.tx_status(self.id)
+        except ArweaveTransactionException:
             self.status = "PENDING"
-
         return self.status
 
     def get_transaction(self):
-        url = "{}/tx/{}".format(self.api_url, self.id)
-
-        response = requests.get(url)
-
-        tx = None
-
-        if response.status_code == 200:
-            self.load_json(response.text)
-        else:
-            logger.error(response.text)
-
-        return tx
+        try:
+            self.load_json(self.peer.tx(self.id))
+        except ArweaveTransactionException as exception:
+            pass
 
     def get_price(self):
-        url = "{}/price/{}".format(self.api_url, self.data_size)
-
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            return winston_to_ar(response.text)
-        else:
-            logger.error(response.text)
+        try:
+            return self.peer.price(self.data_size)
+        except TransactionException as exception:
+            pass
 
     def get_data(self):
-        url = "{}/{}/".format(self.api_url, self.id)
-
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            self.data = response.content
-        else:
-            logger.error(response.text)
-
-            raise ArweaveTransactionException(
-                response.text
-            )
+        self.data = self.peer.data(self.id)
+        return self.data
 
     def load_json(self, json_str):
         json_data = json.loads(json_str)
