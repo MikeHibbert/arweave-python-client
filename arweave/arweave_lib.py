@@ -102,7 +102,7 @@ class Peer(object):
             response = self._get("{}/price/{}/{}", data_size, target_address)
         else:
             response = self._get("{}/price/{}", data_size)
-        return winston_to_ar(response.text)
+        return response.text
 
     def send(self, json_data):
         """Submit a Transaction"""
@@ -112,7 +112,7 @@ class Peer(object):
     def wallet_balance(self, address):
         """Get a Wallet Balance"""
         response = self._get("{}/wallet/{}/balance", address)
-        return winston_to_ar(response.text)
+        return response.text
 
     def tx_anchor(self):
         # TODO: the docs say this should be https://arweave.net/wallet/{address}/last_tx
@@ -193,7 +193,8 @@ class Wallet(object):
 
     @property
     def balance(self):
-        return self.peer.wallet_balance(self.address)
+        balance = self.peer.wallet_balance(self.address)
+        return winston_to_ar(balance)
 
     def sign(self, message):
         h = SHA256.new(message)
@@ -283,7 +284,8 @@ class Transaction(object):
                 "Please supply a string containing json to initialize a serialized transaction")
 
     def get_reward(self, data_size, target_address=None):
-        return self.peer.price(data_size, target_address)
+        reward = self.peer.price(data_size, target_address)
+        return winston_to_ar(reward)
 
     def add_tag(self, name, value):
         tag = create_tag(name, value, self.format == 2)
@@ -420,7 +422,8 @@ class Transaction(object):
 
     def get_price(self):
         try:
-            return self.peer.price(self.data_size)
+            price = self.peer.price(self.data_size)
+            return winston_to_ar(price)
         except TransactionException as exception:
             pass
 
