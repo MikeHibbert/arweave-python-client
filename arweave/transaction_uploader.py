@@ -135,7 +135,7 @@ class TransactionUploader:
 
         url = "{}/chunk".format(self.transaction.api_url)
 
-        headers = {'Content-Type': 'application/json', 'Accept': 'text/plain'}
+        headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/plain, */*'}
 
         response = requests.post(url, data=json.dumps(chunk), headers=headers)
 
@@ -172,7 +172,7 @@ class TransactionUploader:
 
         if upload_in_body:
             url = "{}/tx".format(self.transaction.api_url)
-            headers = {'Content-Type': 'application/json', 'Accept': 'text/plain'}
+            headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/plain, */*'}
 
             self.transaction.data = chunk['chunk']
 
@@ -198,7 +198,7 @@ class TransactionUploader:
                 )
 
         url = "{}/tx".format(self.transaction.api_url)
-        headers = {'Content-Type': 'application/json', 'Accept': 'text/plain'}
+        headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/plain, */*'}
 
         self.transaction.data = b''
 
@@ -306,7 +306,7 @@ def from_transaction_id(file_handler, transaction_str, wallet, api_url=API_URL):
 
     url = "{}/tx/{}".format(api_url, tx.get('id'))
 
-    headers = {'Content-Type': 'application/json', 'Accept': 'text/plain'}
+    headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/plain, */*'}
 
     response = requests.get(url, headers=headers)
 
