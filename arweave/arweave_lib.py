@@ -477,13 +477,12 @@ def arql_with_transaction_data(wallet, query):
     """
 
     transaction_ids = arql(wallet, query)
-    if transaction_ids:
-        transactions = []
-        for transaction_id in transaction_ids:
-            tx = Transaction(wallet, id=transaction_id)
-            tx.get_transaction()
-            tx.get_data()
-
-            transactions.append(tx)
-
-    return None
+    if not transaction_ids:
+        return None
+    transactions = []
+    for transaction_id in transaction_ids:
+        tx = Transaction(wallet, id=transaction_id)
+        tx.get_transaction()
+        tx.get_data()
+        transactions.append(tx)
+    return transactions
