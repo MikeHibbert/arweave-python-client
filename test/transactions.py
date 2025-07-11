@@ -75,6 +75,16 @@ def run_test(jwk_file, tests=[1,2,3]):
         tx.send()
 
         logger.info("{} uploaded successfully".format(tx.id))
+        
+    if 4 in tests:
+        GATEWAY_URL = "https://www.hibbertitsolutions.co.uk"
+        tx = tx = Transaction(wallet, gateway=GATEWAY_URL)
+        
+        if tx.api_url != GATEWAY_URL:
+            raise Exception("api_url not set promperly")
+        else:
+            logger.info("api_url set successfully to {}".format(tx.api_url))
+            
     #
     # tx_ids = arql(wallet, {
     #     "op": "and",

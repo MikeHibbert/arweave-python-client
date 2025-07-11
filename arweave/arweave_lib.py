@@ -106,7 +106,7 @@ class Transaction(object):
         self.tags = []
         self.format = kwargs.get('format', 2)
 
-        self.api_url = API_URL
+        self.api_url = kwargs.get('gateway', API_URL)
         self.chunks = None
 
         data = kwargs.get('data', '')
