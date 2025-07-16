@@ -8,8 +8,8 @@ from arweave.transaction_uploader import get_uploader, from_transaction_id
 logger = logging.getLogger(__name__)
 
 
-def run_test(jwk_file, tests=[1,2,3]):
-    wallet = Wallet(jwk_file)
+def run_test(jwk_file, tests=[1, 2, 3, 4, 5]):
+    wallet = Wallet(jwk_file, gateway="https://arns-gateway.com")
 
     DATA = b'dGVzdA'
     DATA_ROOT = b'uwdqwpnoHTe237EIEIOizSYku8wkiVZJY-E6cv33wt4'
@@ -139,6 +139,20 @@ def run_test(jwk_file, tests=[1,2,3]):
 
         logger.info(tx.data)
         logger.info(tx.data_root)
+        
+    if 5 in tests:
+        tx = Transaction(wallet=wallet, data="test",gateway="https://arns-gateway.com") 
+
+        assert tx.api_url == "https://arns-gateway.com"
+        
+        tx.sign()
+        
+        assert tx.api_url == "https://arns-gateway.com"
+        
+        tx.send()
+        
+        assert tx.api_url == "https://arns-gateway.com"
+        
 
     # if tx.data != DATA:
     #     raise Exception("Data does not match expected result!")
@@ -179,9 +193,9 @@ if __name__ == "__main__":
     from os.path import isfile, join
     from os import listdir
 
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-    wallet_path = os.path.join(BASE_DIR, 'arkive', 'wallet')
+    wallet_path = os.path.join(BASE_DIR, 'wallets')
 
     files = [f for f in listdir(wallet_path) if isfile(join(wallet_path, f))]
 
@@ -190,4 +204,4 @@ if __name__ == "__main__":
     else:
         raise FileNotFoundError("Unable to load a wallet JSON file from wallet/ ")
 
-    run_test(join(wallet_path, filename), [1,2,3,4])
+    run_test(join(wallet_path, filename), [5])
